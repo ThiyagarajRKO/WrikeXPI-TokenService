@@ -7,7 +7,7 @@ import { ValidateUser } from "../middlewares/authentication";
 
 //Public Routes
 export const PublicRouters = (fastify, opts, done) => {
-  fastify.register(tokenRoute, { prefix: "/wrike/token" });
+  fastify.register(tokenRoute, { prefix: "/wrikexpi/token" });
 
   done();
 };

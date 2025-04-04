@@ -61,5 +61,5 @@ fastify.addHook("onSend", function (request, reply, payload, done) {
 
 // View Handlers
 fastify.get("/", (req, res) => {
-  res.send({ message: "Wrike webhook hub server is running..." });
+  res.send({ message: "WrikeXPI Token Service server is running..." });
 });
