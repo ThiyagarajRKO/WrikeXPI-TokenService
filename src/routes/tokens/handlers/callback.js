@@ -64,7 +64,7 @@ export const WrikeXPICallback = ({ code }, fastify) => {
       );
 
       // Sending final response
-      resolve({ data: { token } });
+      resolve(token);
     } catch (err) {
       console.log(err?.message || err);
       reject(err);
@@ -84,12 +84,13 @@ const wrikeUserData = (access_token) => {
         },
         null
       );
-      if (result?.error) return reject(result["error_description"]);
+      if (result?.error)
+        return reject({ message: result["error_description"] });
 
       resolve(result?.data[0]);
     } catch (err) {
       console.log("Error while getting user details: ", err?.message ?? err);
-      reject(err?.message ?? err);
+      reject(err);
     }
   });
 };
@@ -101,9 +102,9 @@ const getWrikeTokens = async (code) => {
         process.env;
 
       if (!WRIKE_LOGIN_ENDPOINT || !WRIKE_CLIENT_ID || !WRIKE_CLIENT_SECRET) {
-        return reject(
-          "Missing WRIKE_LOGIN_ENDPOINT or WRIKE_CLIENT_ID in environment variables"
-        );
+        return reject({
+          message: "Unable to fetch token! Please try after sometimes",
+        });
       }
 
       const url = `${WRIKE_LOGIN_ENDPOINT}/token`;
@@ -122,12 +123,13 @@ const getWrikeTokens = async (code) => {
         }
       );
 
-      if (result?.error) return reject(result["error_description"]);
+      if (result?.error)
+        return reject({ message: result["error_description"] });
 
       resolve(result);
     } catch (err) {
       console.log("Error while getting access token: ", err?.message ?? err);
-      reject(err?.message ?? err);
+      reject(err);
     }
   });
 };
