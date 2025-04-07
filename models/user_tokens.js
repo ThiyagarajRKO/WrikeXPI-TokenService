@@ -38,6 +38,9 @@ module.exports = (sequelize, DataTypes) => {
       encrypted_refresh_token: {
         type: DataTypes.TEXT,
       },
+      is_active: {
+        type: DataTypes.BOOLEAN,
+      },
       created_at: {
         type: DataTypes.DATE,
       },
@@ -55,13 +58,15 @@ module.exports = (sequelize, DataTypes) => {
       underscored: true,
       createdAt: false,
       updatedAt: false,
+      paranoid: true,
+      deletedAt: "deleted_at",
     }
   );
 
   UserTokens.beforeCreate((data, options) => {
     try {
       data.created_at = new Date();
-      data.created_by = options?.user_id;
+      data.created_by = options?.profile_id;
     } catch (err) {
       console.log("Error while creating a user token", err?.message || err);
     }
@@ -71,7 +76,7 @@ module.exports = (sequelize, DataTypes) => {
   UserTokens.beforeUpdate(async (data, options) => {
     try {
       data.updated_at = new Date();
-      data.updated_by = options?.user_id;
+      data.updated_by = options?.profile_id;
     } catch (err) {
       console.log("Error while updating a user token", err?.message || err);
     }

@@ -17,6 +17,7 @@ module.exports = {
         },
         wrike_user_id: {
           type: Sequelize.STRING,
+          allowNull: false,
         },
         is_active: {
           defaultValue: false,
@@ -27,6 +28,9 @@ module.exports = {
           type: Sequelize.DATE,
         },
         updated_at: {
+          type: Sequelize.DATE,
+        },
+        deleted_at: {
           type: Sequelize.DATE,
         },
       }

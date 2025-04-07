@@ -46,6 +46,9 @@ module.exports = (sequelize, DataTypes) => {
       updated_at: {
         type: DataTypes.DATE,
       },
+      deleted_at: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
@@ -61,9 +64,6 @@ module.exports = (sequelize, DataTypes) => {
 
   Users.beforeCreate((data, options) => {
     try {
-      if (data?.password) {
-        data.password = bcrypt.hashSync(data.password, bcrypt.genSaltSync(10));
-      }
       if (data?.email) {
         data.email = data?.email?.toLowerCase();
       }
@@ -76,8 +76,21 @@ module.exports = (sequelize, DataTypes) => {
   Users.beforeUpdate(async (data, options) => {
     try {
       data.updated_at = new Date();
+      data.updated_by = options.profile_id;
     } catch (err) {
       console.log("Error while updating an user", err?.message || err);
+    }
+  });
+
+  // Delete Hook
+  Users.afterDestroy(async (data, options) => {
+    try {
+      // data.deleted_by = options?.user_id;
+      data.is_active = false;
+
+      await data.save({ profile_id: options.profile_id });
+    } catch (err) {
+      console.log("Error while deleting a user token", err?.message || err);
     }
   });
 

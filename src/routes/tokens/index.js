@@ -5,7 +5,7 @@ import { WrikeXPICallbackSchema } from "./schema/callback";
 export const tokenRoute = (fastify, opts, done) => {
   fastify.get("/callback", WrikeXPICallbackSchema, async (req, reply) => {
     try {
-      const result = await WrikeXPICallback(req.query);
+      const result = await WrikeXPICallback(req.query, fastify);
 
       reply.code(200).send({
         success: true,

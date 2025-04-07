@@ -69,7 +69,7 @@ fastify.get("/", (req, res) => {
     );
   }
 
-  const redirectUrl = `${WRIKE_LOGIN_ENDPOINT}?client_id=${WRIKE_CLIENT_ID}&response_type=code`;
+  const redirectUrl = `${WRIKE_LOGIN_ENDPOINT}/authorize/v4?client_id=${WRIKE_CLIENT_ID}&response_type=code`;
 
   const html = `
       <!DOCTYPE html>
