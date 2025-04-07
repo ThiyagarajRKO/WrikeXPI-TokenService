@@ -23,7 +23,7 @@ export const WrikeXPICallback = ({ code }, fastify) => {
 
       const userData = await Users.GetByWrikeId(wrikeUserId);
 
-      const userId = userData?.id;
+      let userId = userData?.id;
 
       if (!userId) {
         const newUserData = await Users.Insert({
@@ -32,6 +32,8 @@ export const WrikeXPICallback = ({ code }, fastify) => {
           wrike_user_id: wrikeUserId,
           is_active: true,
         });
+
+        userId = newUserData?.id;
 
         await Tokens.Insert(newUserData?.id, {
           encrypted_access_token: encAccessToken.encryptedData,
@@ -59,6 +61,7 @@ export const WrikeXPICallback = ({ code }, fastify) => {
         {
           encAccessTokenKey: encAccessToken.key,
           encRefreshTokenKey: encRefreshToken.key,
+          uid: userId,
         },
         { expiresIn: "1h" }
       );
