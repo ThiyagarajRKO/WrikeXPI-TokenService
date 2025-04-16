@@ -1,6 +1,7 @@
 import { encryptWithRandomKey } from "../../../utils/crypto";
 import { GetResponse } from "../../../utils/node-fetch";
 import { Tokens, Users } from "../../../controllers";
+import { getSecrets } from "../../../utils/azure_vault";
 
 export const WrikeXPICallback = ({ code }, fastify) => {
   return new Promise(async (resolve, reject) => {
@@ -103,6 +104,14 @@ const getWrikeTokens = async (code) => {
     try {
       const { WRIKE_LOGIN_ENDPOINT, WRIKE_CLIENT_ID, WRIKE_CLIENT_SECRET } =
         process.env;
+      // const { WRIKE_LOGIN_ENDPOINT } = process.env;
+
+      // const secretValues = await getSecrets([
+      //   "XPI_API_ClientId",
+      //   "XPI_API_ClientSecret",
+      // ]);
+
+      // const { XPI_API_ClientId: WRIKE_CLIENT_ID, XPI_API_ClientSecret: WRIKE_CLIENT_SECRET } = secretValues;
 
       if (!WRIKE_LOGIN_ENDPOINT || !WRIKE_CLIENT_ID || !WRIKE_CLIENT_SECRET) {
         return reject({

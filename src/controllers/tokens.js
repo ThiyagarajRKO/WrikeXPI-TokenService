@@ -49,7 +49,7 @@ export const GetByUserId = (id) => {
       }
 
       const userTokens = await models.UserTokens.findOne({
-        attributes: ["id"],
+        attributes: ["id", "encrypted_access_token", "encrypted_refresh_token"],
         where: {
           created_by: id,
           is_active: true,

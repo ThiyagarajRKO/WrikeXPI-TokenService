@@ -1,8 +1,28 @@
 import { WrikeXPICallback } from "./handlers/callback";
+import { GetUserData } from "./handlers/getUserData";
 
 import { WrikeXPICallbackSchema } from "./schema/callback";
+import { GetUserProfileSchema } from "./schema/getuserProfile";
 
 export const tokenRoute = (fastify, opts, done) => {
+  fastify.post("/profile", GetUserProfileSchema, async (req, reply) => {
+    try {
+      const result = await GetUserData(req.body, fastify);
+
+      return reply.code(200).send({
+        success: true,
+        message: result?.message,
+        data: result,
+      });
+    } catch (err) {
+      return reply.code(err?.statusCode || 400).send({
+        success: true,
+        message: err?.message,
+        data: null,
+      });
+    }
+  });
+
   fastify.get("/callback", WrikeXPICallbackSchema, async (req, reply) => {
     try {
       const token = await WrikeXPICallback(req.query, fastify);
@@ -278,6 +298,265 @@ export const tokenRoute = (fastify, opts, done) => {
         .type("text/html")
         .send(html);
     }
+  });
+
+  fastify.get("/evaluate", async (req, reply) => {
+    const html = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Evaluate Token</title>
+    <style>
+      :root {
+        --accent: #4CAF50;
+        --bg-blur: rgba(255, 255, 255, 0.06);
+        --border-light: rgba(255, 255, 255, 0.15);
+        --text-subtle: #cccccc;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(-45deg, #1f1c2c, #928dab, #2e2e52, #515175);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        padding: 20px;
+      }
+
+      @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      .card {
+        backdrop-filter: blur(20px);
+        background-color: var(--bg-blur);
+        border: 1px solid var(--border-light);
+        border-radius: 24px;
+        padding: 40px 30px;
+        max-width: 760px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        animation: popIn 0.7s ease-out;
+      }
+
+      @keyframes popIn {
+        from { opacity: 0; transform: scale(0.96) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
+      h1 {
+        font-size: 1.9rem;
+        margin-bottom: 20px;
+      }
+
+      textarea {
+        width: 100%;
+        height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+        padding: 15px;
+        font-size: 0.95rem;
+        font-family: monospace;
+        resize: none;
+        background: rgba(255,255,255,0.05);
+        color: #e0e0e0;
+        margin-bottom: 20px;
+        transition: border 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      textarea:focus {
+        border: none;
+        outline: none;
+        box-shadow: 0 0 0 2px var(--accent);
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+
+      button {
+        background: var(--accent);
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        background: #3da543;
+        transform: translateY(-1px);
+      }
+
+      .token-result {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border-light);
+        padding: 20px;
+        border-radius: 12px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: #e0e0e0;
+        text-align: left;
+        max-height: 300px;
+        margin-top: 10px;
+        overflow-y: auto;
+        word-wrap: break-word;
+        display: none;
+      }
+
+      .token-box {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 15px;
+        border-radius: 12px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: #e0e0e0;
+        text-align: left;
+        max-height: 300px;
+        overflow-y: auto;
+        word-wrap: break-word;
+        transition: box-shadow 0.3s ease;
+      }
+
+      .token-box:hover {
+        box-shadow: 0 0 0 2px var(--accent);
+      }
+
+      .error {
+        color: #ff9999;
+        margin-top: 15px;
+      }
+
+      .success {
+        color: #90ee90;
+        margin-top: 15px;
+      }
+
+      .loader {
+        border: 3px solid rgba(255,255,255,0.2);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Evaluate JWT Token</h1>
+      <textarea class="token-box" id="tokenInput" placeholder="Paste your JWT token here..."></textarea>
+      <div class="btn-group">
+        <button onclick="pasteToken()">📋 Paste from Clipboard</button>
+        <button id="profileBtn" onclick="getProfile()">
+          <span id="profileText">🔍 Get Profile</span>
+          <span id="profileLoader" class="loader" style="display: none;"></span>
+        </button>
+      </div>
+      <div id="feedback" class="success"></div>
+      <pre id="tokenResult" class="token-result"></pre>
+    </div>
+
+    <script>
+      async function pasteToken() {
+        try {
+          const text = await navigator.clipboard.readText();
+          document.getElementById('tokenInput').value = text;
+        } catch (err) {
+          alert("Clipboard access denied.");
+        }
+      }
+
+      async function getProfile() {
+        const token = document.getElementById('tokenInput').value.trim();
+        const feedback = document.getElementById('feedback');
+        const resultBox = document.getElementById('tokenResult');
+        const profileBtn = document.getElementById('profileBtn');
+        const profileText = document.getElementById('profileText');
+        const profileLoader = document.getElementById('profileLoader');
+
+        feedback.textContent = '';
+        resultBox.textContent = '';
+        resultBox.style.display = 'none';
+
+        if (!token) {
+          feedback.textContent = '⚠️ Please enter a token.';
+          feedback.className = 'error';
+          return;
+        }
+
+        // Show loader and disable button
+        profileLoader.style.display = 'inline-block';
+        profileText.style.display = 'none';
+        profileBtn.disabled = true;
+
+        try {
+          const res = await fetch('/api/v1/wrikexpi/token/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            feedback.textContent = '✅ Welcome, ' + data?.data?.firstName + '!';
+            feedback.className = 'success';
+            resultBox.style.display = 'block';
+            resultBox.textContent = JSON.stringify(data?.data, null, 4);
+          } else {
+            feedback.textContent = '❌ Invalid token or verification failed.';
+            feedback.className = 'error';
+            resultBox.style.display = 'block';
+            resultBox.textContent = JSON.stringify(data?.message, null, 2);
+          }
+        } catch (err) {
+          feedback.textContent = '⚠️ Error verifying token.';
+          feedback.className = 'error';
+        } finally {
+          // Hide loader and enable button again
+          profileLoader.style.display = 'none';
+          profileText.style.display = 'inline';
+          profileBtn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+  </html>
+  `;
+
+    reply.type("text/html").send(html);
   });
 
   done();
