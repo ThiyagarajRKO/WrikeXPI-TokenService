@@ -410,6 +410,11 @@ export const tokenRoute = (fastify, opts, done) => {
         transform: translateY(-1px);
       }
 
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
       .token-result {
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid var(--border-light);
@@ -478,10 +483,10 @@ export const tokenRoute = (fastify, opts, done) => {
       <h1>Evaluate JWT Token</h1>
       <textarea class="token-box" id="tokenInput" placeholder="Paste your JWT token here..."></textarea>
       <div class="btn-group">
-        <button onclick="pasteToken()">📋 Paste from Clipboard</button>
-        <button id="profileBtn" onclick="getProfile()">
-          <span id="profileText">🔍 Get Profile</span>
-          <span id="profileLoader" class="loader" style="display: none;"></span>
+        <button onclick="pasteToken()">Paste from Clipboard</button>
+        <button id="verifyBtn" onclick="verifyToken()">
+          <span id="verifyText">Verify Token</span>
+          <span id="verifyLoader" class="loader" style="display: none;"></span>
         </button>
       </div>
       <div id="feedback" class="success"></div>
@@ -498,13 +503,13 @@ export const tokenRoute = (fastify, opts, done) => {
         }
       }
 
-      async function getProfile() {
+      async function verifyToken() {
         const token = document.getElementById('tokenInput').value.trim();
         const feedback = document.getElementById('feedback');
         const resultBox = document.getElementById('tokenResult');
-        const profileBtn = document.getElementById('profileBtn');
-        const profileText = document.getElementById('profileText');
-        const profileLoader = document.getElementById('profileLoader');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const verifyText = document.getElementById('verifyText');
+        const verifyLoader = document.getElementById('verifyLoader');
 
         feedback.textContent = '';
         resultBox.textContent = '';
@@ -517,9 +522,9 @@ export const tokenRoute = (fastify, opts, done) => {
         }
 
         // Show loader and disable button
-        profileLoader.style.display = 'inline-block';
-        profileText.style.display = 'none';
-        profileBtn.disabled = true;
+        verifyLoader.style.display = 'inline-block';
+        verifyText.style.display = 'none';
+        verifyBtn.disabled = true;
 
         try {
           const res = await fetch('/api/v1/wrikexpi/token/profile', {
@@ -546,9 +551,9 @@ export const tokenRoute = (fastify, opts, done) => {
           feedback.className = 'error';
         } finally {
           // Hide loader and enable button again
-          profileLoader.style.display = 'none';
-          profileText.style.display = 'inline';
-          profileBtn.disabled = false;
+          verifyLoader.style.display = 'none';
+          verifyText.style.display = 'inline';
+          verifyBtn.disabled = false;
         }
       }
     </script>
