@@ -181,7 +181,6 @@ fastify.get("/", (req, res) => {
 
     .secondary-link {
       display: inline-block;
-      margin-top: 30px;
       font-size: 0.95rem;
       color: #dddddd;
       text-decoration: none;
@@ -219,7 +218,7 @@ fastify.get("/", (req, res) => {
       <span>Login with Wrike</span>
     </a>
 
-    <p style="margin-bottom: 0px !important; font-size: 0.95rem; color: #dddddd;">
+    <p style="margin-top: 30px; margin-bottom: 0px !important; font-size: 0.95rem; color: #dddddd;">
       Do you want to verify your token?
       <a href="/api/v1/wrikexpi/token/evaluate" class="secondary-link" style="color: #9ae6b4; font-weight: 600; text-decoration: underline; margin-left: 4px;">
         Click here
