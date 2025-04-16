@@ -2,10 +2,10 @@ import { WrikeXPICallback } from "./handlers/callback";
 import { GetUserData } from "./handlers/getUserData";
 
 import { WrikeXPICallbackSchema } from "./schema/callback";
-import { GetUserProfileSchema } from "./schema/getuserProfile";
+import { GetUserDataSchema } from "./schema/getUserData";
 
 export const tokenRoute = (fastify, opts, done) => {
-  fastify.post("/profile", GetUserProfileSchema, async (req, reply) => {
+  fastify.post("/profile", GetUserDataSchema, async (req, reply) => {
     try {
       const result = await GetUserData(req.body, fastify);
 

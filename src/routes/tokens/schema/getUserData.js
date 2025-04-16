@@ -1,4 +1,4 @@
-export const GetUserProfileSchema = {
+export const GetUserDataSchema = {
   schema: {
     body: {
       type: "object",
