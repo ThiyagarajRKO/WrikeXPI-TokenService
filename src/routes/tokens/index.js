@@ -385,6 +385,11 @@ export const tokenRoute = (fastify, opts, done) => {
         box-shadow: 0 0 0 2px var(--accent);
       }
 
+      textarea::placeholder {
+        color: white;
+        opacity: 0.6; /* optional: makes the text a bit more subtle */
+      }
+
       .btn-group {
         display: flex;
         gap: 15px;
