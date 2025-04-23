@@ -220,7 +220,7 @@ fastify.get("/", (req, res) => {
 
     <p style="margin-top: 30px; margin-bottom: 0px !important; font-size: 0.95rem; color: #dddddd;">
       Do you want to verify your token?
-      <a href="${pricess.env.BASE_PATH}api/v1/wrikexpi/token/evaluate" class="secondary-link" style="color: #9ae6b4; font-weight: 600; text-decoration: underline; margin-left: 4px;">
+      <a href="${process.env.BASE_PATH}api/v1/wrikexpi/token/evaluate" class="secondary-link" style="color: #9ae6b4; font-weight: 600; text-decoration: underline; margin-left: 4px;">
         Click here
       </a>
     </p>
