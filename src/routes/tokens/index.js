@@ -42,6 +42,7 @@ export const tokenRoute = (fastify, opts, done) => {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>WrikeXPI Secure Token</title>
+  <link rel="icon" href="https://cdn.wrike.com/static/branding/wrike/favicons/favicon.ico">
   <style>
     :root {
       --accent: #4CAF50;
@@ -197,6 +198,7 @@ export const tokenRoute = (fastify, opts, done) => {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Error</title>
+  <link rel="icon" href="https://cdn.wrike.com/static/branding/wrike/favicons/favicon.ico">
   <style>
     :root {
       --accent: #ff5252;
@@ -308,6 +310,7 @@ export const tokenRoute = (fastify, opts, done) => {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Evaluate Token</title>
+    <link rel="icon" href="https://cdn.wrike.com/static/branding/wrike/favicons/favicon.ico">
     <style>
       :root {
         --accent: #4CAF50;

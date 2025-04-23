@@ -77,7 +77,8 @@ fastify.get("/", (req, res) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Connect to Wrike</title>
+  <title>Wrike Token Service</title>
+  <link rel="icon" href="https://cdn.wrike.com/static/branding/wrike/favicons/favicon.ico">
   <style>
     * {
       margin: 0;
