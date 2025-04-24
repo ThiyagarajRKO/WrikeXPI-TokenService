@@ -1,9 +1,10 @@
 "use strict";
 
 import { tokenRoute } from "./tokens";
+import { campaignRoute } from "./campaign";
 
 // Auth Middleware
-import { ValidateUser } from "../middlewares/authentication";
+import { ValidateToken } from "../middlewares/authentication";
 
 //Public Routes
 export const PublicRouters = (fastify, opts, done) => {
@@ -14,11 +15,10 @@ export const PublicRouters = (fastify, opts, done) => {
 
 //Protected Routes
 export const PrivateRouters = (fastify, opts, done) => {
-  // Validating session
-  fastify.addHook("onRequest", ValidateUser);
-  // fastify.use(ValidateUser);
+  // Validating Token
+  // fastify.addHook("onRequest", ValidateToken);
 
-  // fastify.register(logRoute, { prefix: "/kafka" });
+  fastify.register(campaignRoute, { prefix: "/wrikexpi/campaign" });
 
   done();
 };
