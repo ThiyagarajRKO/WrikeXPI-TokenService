@@ -535,7 +535,7 @@ export const tokenRoute = (fastify, opts, done) => {
         verifyBtn.disabled = true;
 
         try {
-          const res = await fetch('/api/v1/wrikexpi/token/profile', {
+          const res = await fetch('${process.env.BASE_PATH}/api/v1/wrikexpi/token/profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token }),
