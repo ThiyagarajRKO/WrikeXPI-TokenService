@@ -11,8 +11,9 @@ export const ValidateToken = async (req, reply) => {
       });
     }
 
-    const { uid, encAccessTokenKey, encRefreshTokenKey } =
-      await fastify.jwt.verify(token);
+    await req.jwtVerify();
+
+    const { uid, encAccessTokenKey, encRefreshTokenKey } = req?.user;
 
     if (!uid || !encAccessTokenKey || !encRefreshTokenKey)
       return reply.code(403).send({
