@@ -16,7 +16,7 @@ export const PublicRouters = (fastify, opts, done) => {
 //Protected Routes
 export const PrivateRouters = (fastify, opts, done) => {
   // Validating Token
-  // fastify.addHook("onRequest", ValidateToken);
+  fastify.addHook("onRequest", ValidateToken);
 
   fastify.register(campaignRoute, { prefix: "/wrikexpi/campaign" });
 

@@ -21,12 +21,12 @@ const customFieldsMeta = {
 export const GetCampaign = (wrikeToken, params, fastify) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // if (!wrikeToken)
-      //   return reject({
-      //     statusCode: 403,
-      //     message:
-      //       "Failed authorization! User is not authorized to access the service.",
-      //   });
+      if (!wrikeToken)
+        return reject({
+          statusCode: 403,
+          message:
+            "Failed authorization! User is not authorized to access the service.",
+        });
 
       // Variable Declaration
       const { campaignId: folderId, filter: filterParams } = params;
@@ -82,41 +82,40 @@ export const GetCampaign = (wrikeToken, params, fastify) => {
 
       // Sending final response
       resolve({
-        // data: {
-        //   type: "Campaign",
-        //   campaignStartDate: "",
-        //   campaignEndDate: "",
-        //   customfieldlist: [],
-        //   noofcrs: 5,
-        //   agency: "Mindshare",
-        //   mediabuyingtype: "Biddable",
-        //   brand: "",
-        //   briefeddate: "2025-01-24",
-        //   campaignbudget: 1200,
-        //   campaignenddate: "2025-04-02",
-        //   campaignid: "",
-        //   campaignname: "Go Wrike Way Promotion",
-        //   campaignobjective: "",
-        //   campaignstartdate: "2025-02-22",
-        //   campaignfeedbackstatus: "",
-        //   ccuid: "",
-        //   mediachannelpractice: "",
-        //   client: "",
-        //   comments: "",
-        //   cssid: "",
-        //   currency: "",
-        //   customerponumber: "",
-        //   debtor: "",
-        //   kpiobjective: "",
-        //   originalagency: "",
-        //   readyforarchive: "Completed",
-        //   region: "",
-        //   requestedstartdate: "2025-01-11",
-        //   requestormarket: "Malaysia",
-        //   spacename: "GRM-MYS-GMN",
-        //   workitemlevel: "Campaign",
-        // },
-        data: filters,
+        data: {
+          type: "Campaign",
+          campaignStartDate: "",
+          campaignEndDate: "",
+          customfieldlist: [],
+          noofcrs: 5,
+          agency: "Mindshare",
+          mediabuyingtype: "Biddable",
+          brand: "",
+          briefeddate: "2025-01-24",
+          campaignbudget: 1200,
+          campaignenddate: "2025-04-02",
+          campaignid: "",
+          campaignname: "Go Wrike Way Promotion",
+          campaignobjective: "",
+          campaignstartdate: "2025-02-22",
+          campaignfeedbackstatus: "",
+          ccuid: "",
+          mediachannelpractice: "",
+          client: "",
+          comments: "",
+          cssid: "",
+          currency: "",
+          customerponumber: "",
+          debtor: "",
+          kpiobjective: "",
+          originalagency: "",
+          readyforarchive: "Completed",
+          region: "",
+          requestedstartdate: "2025-01-11",
+          requestormarket: "Malaysia",
+          spacename: "GRM-MYS-GMN",
+          workitemlevel: "Campaign",
+        },
       });
     } catch (err) {
       console.log(err?.message || err);
