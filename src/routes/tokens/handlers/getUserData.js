@@ -1,7 +1,6 @@
 import { decryptWithKey } from "../../../utils/crypto";
 import { GetResponse } from "../../../utils/node-fetch";
 import { Tokens, Users } from "../../../controllers";
-import { getSecrets } from "../../../utils/azure_vault";
 
 export const GetUserData = ({ token }, fastify) => {
   return new Promise(async (resolve, reject) => {

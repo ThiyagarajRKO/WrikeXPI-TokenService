@@ -55,7 +55,11 @@ export const GetByUserId = (id) => {
           is_active: true,
         },
       });
-      resolve(userTokens);
+      resolve({
+        id: userTokens?.id,
+        encrypted_access_token: userTokens?.encrypted_access_token,
+        encrypted_refresh_token: userTokens?.encrypted_refresh_token,
+      });
     } catch (err) {
       reject(err);
     }
