@@ -9,6 +9,7 @@ dotenv.config();
 
 // Importing Routes
 import { PrivateRouters, PublicRouters } from "./routes";
+import { getSecrets } from "./utils/azure_vault";
 
 // Configure the framework and instantiate it
 const fastify = Fastify({
@@ -60,16 +61,27 @@ fastify.addHook("onSend", function (request, reply, payload, done) {
 });
 
 // View Handlers
-fastify.get("/", (req, res) => {
-  const { WRIKE_LOGIN_ENDPOINT, WRIKE_CLIENT_ID } = process.env;
+fastify.get("/", async (req, res) => {
+  const { WRIKE_LOGIN_ENDPOINT, WRIKE_REDIRECT_URL } = process.env;
 
-  if (!WRIKE_LOGIN_ENDPOINT || !WRIKE_CLIENT_ID) {
+  if (!WRIKE_LOGIN_ENDPOINT) {
     throw new Error(
       "Missing WRIKE_LOGIN_ENDPOINT or WRIKE_CLIENT_ID in environment variables"
     );
   }
 
-  const redirectUrl = `${WRIKE_LOGIN_ENDPOINT}/authorize/v4?client_id=${WRIKE_CLIENT_ID}&response_type=code`;
+  const secretValues = await getSecrets(["XPI-API-ClientId"]);
+
+  const WRIKE_CLIENT_ID = secretValues["XPI-API-ClientId"];
+
+  if (!WRIKE_CLIENT_ID) {
+    return res.status(400).send({
+      message:
+        "Missing WRIKE_LOGIN_ENDPOINT or WRIKE_CLIENT_ID in environment variables",
+    });
+  }
+
+  const redirectUrl = `${WRIKE_LOGIN_ENDPOINT}/authorize/v4?client_id=${WRIKE_CLIENT_ID}&response_type=code&redirect_uri=${WRIKE_REDIRECT_URL}`;
 
   const html = `
 <!DOCTYPE html>

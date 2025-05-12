@@ -102,16 +102,15 @@ const wrikeUserData = (access_token) => {
 const getWrikeTokens = async (code) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const { WRIKE_LOGIN_ENDPOINT, WRIKE_CLIENT_ID, WRIKE_CLIENT_SECRET } =
-        process.env;
-      // const { WRIKE_LOGIN_ENDPOINT } = process.env;
+      const { WRIKE_LOGIN_ENDPOINT, WRIKE_REDIRECT_URL } = process.env;
 
-      // const secretValues = await getSecrets([
-      //   "XPI_API_ClientId",
-      //   "XPI_API_ClientSecret",
-      // ]);
+      const secretValues = await getSecrets([
+        "XPI-API-ClientId",
+        "XPI-API-ClientSecret",
+      ]);
 
-      // const { XPI_API_ClientId: WRIKE_CLIENT_ID, XPI_API_ClientSecret: WRIKE_CLIENT_SECRET } = secretValues;
+      const WRIKE_CLIENT_ID = secretValues["XPI-API-ClientId"];
+      const WRIKE_CLIENT_SECRET = secretValues["XPI-API-ClientSecret"];
 
       if (!WRIKE_LOGIN_ENDPOINT || !WRIKE_CLIENT_ID || !WRIKE_CLIENT_SECRET) {
         return reject({
@@ -131,6 +130,7 @@ const getWrikeTokens = async (code) => {
           client_id: WRIKE_CLIENT_ID,
           client_secret: WRIKE_CLIENT_SECRET,
           grant_type: "authorization_code",
+          redirect_uri: WRIKE_REDIRECT_URL,
           code,
         }
       );

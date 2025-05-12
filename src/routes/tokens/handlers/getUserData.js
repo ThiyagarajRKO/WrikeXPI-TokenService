@@ -1,6 +1,6 @@
 import { decryptWithKey } from "../../../utils/crypto";
 import { GetResponse } from "../../../utils/node-fetch";
-import { Tokens, Users } from "../../../controllers";
+import { Tokens } from "../../../controllers";
 
 export const GetUserData = ({ token }, fastify) => {
   return new Promise(async (resolve, reject) => {
