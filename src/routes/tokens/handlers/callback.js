@@ -10,8 +10,8 @@ export const WrikeXPICallback = ({ code }, fastify) => {
 
       const { access_token, refresh_token } = await getWrikeTokens(code);
 
-      const encAccessToken = encryptWithRandomKey(access_token);
-      const encRefreshToken = encryptWithRandomKey(refresh_token);
+      const encAccessToken = await encryptWithRandomKey(access_token);
+      const encRefreshToken = await encryptWithRandomKey(refresh_token);
 
       const {
         id: wrikeUserId,
@@ -37,8 +37,8 @@ export const WrikeXPICallback = ({ code }, fastify) => {
         userId = newUserData?.id;
 
         await Tokens.Insert(newUserData?.id, {
-          encrypted_access_token: encAccessToken.encryptedData,
-          encrypted_refresh_token: encRefreshToken.encryptedData,
+          encrypted_access_token: encAccessToken?.encryptedData,
+          encrypted_refresh_token: encRefreshToken?.encryptedData,
           is_active: true,
         });
       } else {
@@ -46,13 +46,13 @@ export const WrikeXPICallback = ({ code }, fastify) => {
 
         if (userTokenData?.id) {
           await Tokens.Update(userId, userTokenData?.id, {
-            encrypted_access_token: encAccessToken.encryptedData,
-            encrypted_refresh_token: encRefreshToken.encryptedData,
+            encrypted_access_token: encAccessToken?.encryptedData,
+            encrypted_refresh_token: encRefreshToken?.encryptedData,
           });
         } else {
           await Tokens.Insert(userId, {
-            encrypted_access_token: encAccessToken.encryptedData,
-            encrypted_refresh_token: encRefreshToken.encryptedData,
+            encrypted_access_token: encAccessToken?.encryptedData,
+            encrypted_refresh_token: encRefreshToken?.encryptedData,
             is_active: true,
           });
         }
@@ -60,8 +60,8 @@ export const WrikeXPICallback = ({ code }, fastify) => {
 
       const token = fastify.jwt.sign(
         {
-          encAccessTokenKey: encAccessToken.key,
-          encRefreshTokenKey: encRefreshToken.key,
+          encAccessTokenKey: encAccessToken?.key,
+          encRefreshTokenKey: encRefreshToken?.key,
           uid: userId,
         },
         { expiresIn: "1h" }

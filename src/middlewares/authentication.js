@@ -32,9 +32,12 @@ export const ValidateToken = async (req, reply) => {
           "Failed authorization! User is not authorized to access the service.",
       });
 
-    const wrikeAccessToken = decryptWithKey(encAccessToken, encAccessTokenKey);
+    const wrikeAccessToken = await decryptWithKey(
+      encAccessToken,
+      encAccessTokenKey
+    );
 
-    const wrikeRefreshToken = decryptWithKey(
+    const wrikeRefreshToken = await decryptWithKey(
       encRefreshToken,
       encRefreshTokenKey
     );
@@ -50,7 +53,7 @@ export const ValidateToken = async (req, reply) => {
     console.error(new Date().toISOString() + " : " + err?.message || err);
     reply.code(401).send({
       success: false,
-      message: err?.message || err,
+      message: "Failed authentication! Unable to authenticate user or token.",
     });
   }
 };

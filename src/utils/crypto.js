@@ -1,28 +1,48 @@
 const crypto = require("crypto");
 
 export const encryptWithRandomKey = (plainText) => {
-  const key = crypto.randomBytes(32); // AES-256
-  const iv = crypto.randomBytes(16);
+  return new Promise((resolve, reject) => {
+    if (!plainText) {
+      return reject("Encryption failed: Invalid plain text.");
+    }
 
-  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
-  let encrypted = cipher.update(plainText, "utf8");
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
+    try {
+      const key = crypto.randomBytes(32);
+      const iv = crypto.randomBytes(16);
 
-  return {
-    encryptedData: iv.toString("hex") + ":" + encrypted.toString("hex"),
-    key: key.toString("hex"), // return key to user
-  };
+      const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+      let encrypted = cipher.update(plainText, "utf8");
+      encrypted = Buffer.concat([encrypted, cipher.final()]);
+
+      resolve({
+        encryptedData: iv.toString("hex") + ":" + encrypted.toString("hex"),
+        key: key.toString("hex"), // return key to user
+      });
+    } catch (error) {
+      reject({ message: error.message });
+    }
+  });
 };
 
-export const decryptWithKey = (encryptedData, keyHex) => {
-  const [ivHex, dataHex] = encryptedData.split(":");
-  const iv = Buffer.from(ivHex, "hex");
-  const encrypted = Buffer.from(dataHex, "hex");
-  const key = Buffer.from(keyHex, "hex");
+export const decryptWithKey = async (encryptedData, keyHex) => {
+  return new Promise((resolve, reject) => {
+    if (!encryptedData || !keyHex) {
+      return reject("Decryption failed: Invalid encrypted data or key.");
+    }
 
-  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-  let decrypted = decipher.update(encrypted);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
+    try {
+      const [ivHex, dataHex] = encryptedData.split(":");
+      const iv = Buffer.from(ivHex, "hex");
+      const encrypted = Buffer.from(dataHex, "hex");
+      const key = Buffer.from(keyHex, "hex");
 
-  return decrypted.toString("utf8");
+      const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+      let decrypted = decipher.update(encrypted);
+      decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+      resolve(decrypted.toString("utf8"));
+    } catch (error) {
+      reject({ message: error.message });
+    }
+  });
 };

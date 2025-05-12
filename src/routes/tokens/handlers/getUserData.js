@@ -21,12 +21,12 @@ export const GetUserData = ({ token }, fastify) => {
 
       if (!encAccessToken) return reject({ message: "Invalid Token!" });
 
-      const wrikeAccessToken = decryptWithKey(
+      const wrikeAccessToken = await decryptWithKey(
         encAccessToken,
         encAccessTokenKey
       );
 
-      const wrikeRefreshToken = decryptWithKey(
+      const wrikeRefreshToken = await decryptWithKey(
         encRefreshToken,
         encRefreshTokenKey
       );

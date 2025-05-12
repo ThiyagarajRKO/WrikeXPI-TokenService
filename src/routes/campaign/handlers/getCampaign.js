@@ -65,24 +65,25 @@ export const GetCampaign = (wrikeToken, params, fastify) => {
       // //   })
       // // );
 
-      // // // Modifing folder data
-      // // const wrikeFolderData = await GetResponse(
-      // //   `${process.env.WRIKE_ENDPOINT}/folders/${folderId}`,
-      // //   "GET",
-      // //   {
-      // //     "content-type": "application/json",
-      // //     Authorization: `Bearer ${wrikeToken}`,
-      // //   }
-      // // );
+      // Get folder data
+      const wrikeFolderData = await GetResponse(
+        `${process.env.WRIKE_ENDPOINT}/folders/${folderId}`,
+        "GET",
+        {
+          "content-type": "application/json",
+          Authorization: `Bearer ${wrikeToken}`,
+        }
+      );
 
-      // // // Sending folder update error response
-      // // if (wrikeFolderData?.errorDescription) {
-      // //   return reject(wrikeFolderData);
-      // // }
+      // Sending folder update error response
+      if (wrikeFolderData?.errorDescription) {
+        return reject({ message: wrikeFolderData?.errorDescription });
+      }
 
       // Sending final response
       resolve({
         data: {
+          wrikeFolderData,
           type: "Campaign",
           campaignStartDate: "",
           campaignEndDate: "",
