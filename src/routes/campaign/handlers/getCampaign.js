@@ -65,7 +65,6 @@ export const GetCampaign = (wrikeToken, params, fastify) => {
       // Sending final response
       resolve({
         data: {
-          wrikeFolderData,
           type: "Campaign",
           campaignStartDate: folderCustomFieldValues["Campaign Start Date*"],
           campaignEndDate: folderCustomFieldValues["Campaign End Date*"],

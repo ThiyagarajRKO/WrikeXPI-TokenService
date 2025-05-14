@@ -41,7 +41,6 @@ module.exports = {
     "CSSID*": "IEAC7PRTJUAEGSYH",
     "ReadyForArchive*": "IEAC7PRTJUAFY5EA",
     "Region*": "IEAC7PRTJUAB432Y",
-    "Space Name*": "IEAC7PRTJUADKWAW",
     "Work Item Level": "IEAC7PRTJUADKWPE",
     "Original Agency*": "IEAC7PRTJUAG6BDW",
     "KPI Objective*": "IEAC7PRTJUAB7TUM",
