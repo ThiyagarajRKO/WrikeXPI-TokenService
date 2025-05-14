@@ -1,22 +1,6 @@
 import { GetResponse } from "../../../utils/node-fetch";
 import { defaultParser } from "@odata/parser";
-
-const customFieldsMeta = {
-  "Campaign Name*": { id: "IEABCEFLJUAEF4AO", key: "campaignName" },
-  "Campaign Objective*": { id: "IEABCEFLJUAEF4B7", key: "campaignObjective" },
-  "Campaign Start Date*": { id: "IEABCEFLJUAEF4BI", key: "campaignStartDate" },
-  "Campaign End Date*": { id: "IEABCEFLJUAEF4BJ", key: "campaignEndDate" },
-  "Biddable Nonbiddable*": { id: "", key: "biddableNonbiddable" },
-  "Currency*": { id: "IEABCEFLJUAEGPM6", key: "currency" },
-  "Campaign Budget*": { id: "IEABCEFLJUAEGZFP", key: "campaignBudget" },
-  "Requestor Market*": { id: "", key: "requestorMarket" },
-  "Agency*": { id: "IEABCEFLJUAEF4AI", key: "agency" },
-  "Client*": { id: "IEABCEFLJUAEF4AK", key: "client" },
-  "Debtor*": { id: "IEABCEFLJUAEGGC3", key: "debtor" },
-  "Brand*": { id: "IEABCEFLJUAEF4AJ", key: "brand" },
-  "CSSID*": { id: "IEABCEFLJUAGCS2I", key: "cssid" },
-  "CCUID*": { id: "IEABCEFLJUAGCS2J", key: "ccuid" },
-};
+import customFieldIdMeta from "../utils/customFieldsIds";
 
 export const GetCampaign = (wrikeToken, params, fastify) => {
   return new Promise(async (resolve, reject) => {
@@ -50,20 +34,7 @@ export const GetCampaign = (wrikeToken, params, fastify) => {
           });
       }
 
-      // // let customFields = [];
-
-      // // // Constructing CF values
-      // // await Promise.all(
-      // //   Object.keys(customFieldsMeta)?.map((data) => {
-      // //     const currentData = customFieldsMeta[data];
-      // //     if (currentData?.id) {
-      // //       customFields.push({
-      // //         id: currentData?.id,
-      // //         value: wrikeCampaign[currentData?.key],
-      // //       });
-      // //     }
-      // //   })
-      // // );
+      const customFieldIds = customFieldIdMeta["live"];
 
       // Get folder data
       const wrikeFolderData = await GetResponse(
@@ -80,42 +51,54 @@ export const GetCampaign = (wrikeToken, params, fastify) => {
         return reject({ message: wrikeFolderData?.errorDescription });
       }
 
+      const folderCustomFieldValues = {};
+
+      for (const [key, value] of Object.entries(customFieldIds)) {
+        const cfValue =
+          wrikeFolderData?.data[0]?.customFields?.find(
+            (field) => field.id === value
+          )?.value ?? null;
+
+        folderCustomFieldValues[key] = cfValue;
+      }
+
       // Sending final response
       resolve({
         data: {
           wrikeFolderData,
           type: "Campaign",
-          campaignStartDate: "",
-          campaignEndDate: "",
-          customfieldlist: [],
+          campaignStartDate: folderCustomFieldValues["Campaign Start Date*"],
+          campaignEndDate: folderCustomFieldValues["Campaign End Date*"],
+          customfieldlist: wrikeFolderData?.customFields,
           noofcrs: 5,
-          agency: "Mindshare",
+          agency: folderCustomFieldValues["Agency*"],
           mediabuyingtype: "Biddable",
-          brand: "",
-          briefeddate: "2025-01-24",
-          campaignbudget: 1200,
-          campaignenddate: "2025-04-02",
-          campaignid: "",
-          campaignname: "Go Wrike Way Promotion",
-          campaignobjective: "",
-          campaignstartdate: "2025-02-22",
-          campaignfeedbackstatus: "",
-          ccuid: "",
+          brand: folderCustomFieldValues["Brand*"],
+          briefeddate: folderCustomFieldValues["Briefed Date*"],
+          campaignbudget: folderCustomFieldValues["Campaign Budget*"],
+          campaignenddate: folderCustomFieldValues["Campaign End Date*"],
+          campaignid: folderCustomFieldValues["Campaign ID*"],
+          campaignname: folderCustomFieldValues["Campaign Name*"],
+          campaignobjective: folderCustomFieldValues["Campaign Objective*"],
+          campaignstartdate: folderCustomFieldValues["Campaign Start Date*"],
+          campaignfeedbackstatus:
+            folderCustomFieldValues["CampaignFeedbackStatus*"],
+          ccuid: folderCustomFieldValues["CCUID*"],
           mediachannelpractice: "",
-          client: "",
+          client: folderCustomFieldValues["Client*"],
           comments: "",
-          cssid: "",
-          currency: "",
+          cssid: folderCustomFieldValues["CSSID*"],
+          currency: folderCustomFieldValues["Currency"],
           customerponumber: "",
-          debtor: "",
-          kpiobjective: "",
-          originalagency: "",
-          readyforarchive: "Completed",
-          region: "",
-          requestedstartdate: "2025-01-11",
-          requestormarket: "Malaysia",
-          spacename: "GRM-MYS-GMN",
-          workitemlevel: "Campaign",
+          debtor: folderCustomFieldValues["Debtor*"],
+          kpiobjective: folderCustomFieldValues["KPI Objective*"],
+          originalagency: folderCustomFieldValues["Original Agency*"],
+          readyforarchive: folderCustomFieldValues["ReadyForArchive*"],
+          region: folderCustomFieldValues["Region*"],
+          requestedstartdate: folderCustomFieldValues["Requested Start Date*"],
+          requestormarket: folderCustomFieldValues["Requestor's Market*"],
+          spacename: folderCustomFieldValues["Space Name*"],
+          workitemlevel: folderCustomFieldValues["Work Item Level"],
         },
       });
     } catch (err) {

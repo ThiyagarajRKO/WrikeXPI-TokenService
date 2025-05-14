@@ -53,7 +53,10 @@ export const ValidateToken = async (req, reply) => {
     console.error(new Date().toISOString() + " : " + err?.message || err);
     reply.code(401).send({
       success: false,
-      message: "Failed authentication! Unable to authenticate user or token.",
+      message:
+        err?.message == "Authorization token expired"
+          ? "Token expired! Unable to authenticate user or token."
+          : "Failed authentication! Unable to authenticate user or token.",
     });
   }
 };

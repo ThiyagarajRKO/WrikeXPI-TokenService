@@ -65,9 +65,7 @@ fastify.get("/", async (req, res) => {
   const { WRIKE_LOGIN_ENDPOINT, WRIKE_REDIRECT_URL } = process.env;
 
   if (!WRIKE_LOGIN_ENDPOINT) {
-    throw new Error(
-      "Missing WRIKE_LOGIN_ENDPOINT or WRIKE_CLIENT_ID in environment variables"
-    );
+    throw new Error("Missing WRIKE_LOGIN_ENDPOINT! Please contact your admin");
   }
 
   const secretValues = await getSecrets(["XPI-API-ClientId"]);
@@ -76,8 +74,7 @@ fastify.get("/", async (req, res) => {
 
   if (!WRIKE_CLIENT_ID) {
     return res.status(400).send({
-      message:
-        "Missing WRIKE_LOGIN_ENDPOINT or WRIKE_CLIENT_ID in environment variables",
+      message: "Missing WRIKE_CLIENT_ID. Please contact your admin",
     });
   }
 
