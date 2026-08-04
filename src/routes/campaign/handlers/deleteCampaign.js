@@ -66,26 +66,22 @@ export const DeleteCampaign = (wrikeToken, params, environmentName) => {
               wrikeFolderData?.data[0]?.customFields?.find(
                 (field) => field.id === value.cfId,
               )?.value ?? "";
-            fieldValue = cfData?.value ?? "";
+            cfValue = cfData?.value ?? "";
             break;
           default:
             cfValue = "";
         }
 
-        if (
-          fieldValue &&
-          fieldValue.startsWith("[") &&
-          fieldValue.endsWith("]")
-        ) {
+        if (cfValue && cfValue.startsWith("[") && cfValue.endsWith("]")) {
           const cfMetaData = cfMap.get(cfData?.id);
           const databaseId =
             cfMetaData?.settings?.linkToDatabaseInfo?.dataHubDatabaseId;
 
           if (databaseId) {
-            fieldValue = await translateDatahubRecordId(
+            cfValue = await translateDatahubRecordId(
               wrikeToken,
               databaseId,
-              fieldValue,
+              cfValue,
             );
           }
         }
