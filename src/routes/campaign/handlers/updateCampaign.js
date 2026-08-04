@@ -8,14 +8,6 @@ import {
   translateDatahubValue,
 } from "../utils/datahubRecordTranslator";
 
-const getTodayDate = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 const isValidDateFormat = (value) => {
   // Allow empty values (field not filled in)
   if (!value || typeof value !== "string") return true;
@@ -97,7 +89,7 @@ export const UpdateCampaign = (wrikeToken, params, environmentName) => {
             !isValidDateFormat(formFields[field])
           ) {
             throw {
-              message: `Invalid date format for field '${field}'. Expected format: YYYY-MM-DD (e.g. ${getTodayDate()}).`,
+              message: `Invalid date format for field '${field}'. Expected format: YYYY-MM-DD (e.g. 2026-08-04).`,
             };
           }
 
