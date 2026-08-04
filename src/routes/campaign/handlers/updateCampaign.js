@@ -8,6 +8,34 @@ import {
   translateDatahubValue,
 } from "../utils/datahubRecordTranslator";
 
+const getTodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const isValidDateFormat = (value) => {
+  // Allow empty values (field not filled in)
+  if (!value || typeof value !== "string") return true;
+  if (value.trim() === "") return true;
+
+  // Value must match the YYYY-MM-DD pattern
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(value.trim())) return false;
+
+  // Verify it is a real calendar date (e.g. not 2026-13-45)
+  const [year, month, day] = value.trim().split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+};
+
 export const UpdateCampaign = (wrikeToken, params, environmentName) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -60,6 +88,18 @@ export const UpdateCampaign = (wrikeToken, params, environmentName) => {
         ) {
           const xpiFieldType =
             datahubCustomFieldsData[field?.trim()?.toLowerCase()]?.xpiFieldType;
+
+          const fieldDataType =
+            datahubCustomFieldsData[field?.trim()?.toLowerCase()]?.cfType;
+
+          if (
+            fieldDataType == "Date" &&
+            !isValidDateFormat(formFields[field])
+          ) {
+            throw {
+              message: `Invalid date format for field '${field}'. Expected format: YYYY-MM-DD (e.g. ${getTodayDate()}).`,
+            };
+          }
 
           switch (xpiFieldType) {
             case "Wrike API Built-in Field":
