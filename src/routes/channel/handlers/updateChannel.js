@@ -7,6 +7,7 @@ import {
   translateDatahubRecordId,
   translateDatahubValue,
 } from "../../campaign/utils/datahubRecordTranslator";
+import { isValidDateFormat } from "../../../utils/validation";
 
 export const UpdateChannel = (wrikeToken, params, environmentName) => {
   return new Promise(async (resolve, reject) => {
@@ -60,6 +61,18 @@ export const UpdateChannel = (wrikeToken, params, environmentName) => {
         ) {
           const xpiFieldType =
             datahubCustomFieldsData[field?.trim()?.toLowerCase()]?.xpiFieldType;
+
+          const fieldDataType =
+            datahubCustomFieldsData[field?.trim()?.toLowerCase()]?.cfType;
+
+          if (
+            fieldDataType == "Date" &&
+            !isValidDateFormat(formFields[field])
+          ) {
+            throw {
+              message: `Invalid date format for field '${field}'. Expected format: YYYY-MM-DD (e.g. 2026-08-04).`,
+            };
+          }
 
           switch (xpiFieldType) {
             case "Wrike API Built-in Field":
