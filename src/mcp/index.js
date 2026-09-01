@@ -4,6 +4,7 @@ import { registerChannelTools } from "./tools/channel.js";
 import { registerTaskTools } from "./tools/task.js";
 import { registerDatahubTools } from "./tools/datahub.js";
 import { registerWrikeProxyTools } from "./wrikeMcpProxy.js";
+import wrikeIconDataUri from "./wrikeIcon.js";
 
 /**
  * Create a fully-configured MCP server with all tools registered.
@@ -26,7 +27,7 @@ export const createMcpServer = async (fastify, serverUrl, auth) => {
       websiteUrl: serverUrl,
       icons: [
         {
-          src: "https://cdn.wrike.com/static/branding/wrike/favicons/favicon.ico",
+          src: wrikeIconDataUri,
           mimeType: "image/x-icon",
         },
       ],
