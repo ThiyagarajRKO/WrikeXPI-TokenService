@@ -41,7 +41,7 @@ export const registerChannelTools = (server, serverUrl, auth) => {
         "  EXAMPLES:\n" +
         "    (channelname eq 'TV Spot')\n" +
         "    (channelname eq 'TV Spot' and mediabuytype eq 'Programmatic')\n" +
-        "    has(channelname, 'Digital')",
+        "    channelname has 'Digital'",
       inputSchema: {
         campaignId: z
           .string()
@@ -68,10 +68,7 @@ export const registerChannelTools = (server, serverUrl, auth) => {
         openWorldHint: true,
       },
     },
-    async (
-      { campaignId, filter, pageSize, nextPageToken },
-      extra,
-    ) => {
+    async ({ campaignId, filter, pageSize, nextPageToken }, extra) => {
       if (!auth) return getAuthError(serverUrl);
       try {
         const result = await GetAllChannels(

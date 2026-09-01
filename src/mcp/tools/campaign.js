@@ -36,7 +36,7 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
         "  Field names are the short codes returned by datahub_list_fields (e.g. agency, campaignname, campaignbudget, brand, client).\n" +
         "\n" +
         "  OPERATORS:\n" +
-        "    eq         – equals (case-insensitive string match)\n" +
+        "    eq         – equals\n" +
         "    ne         – not equal\n" +
         "    lt / le    – less than / less or equal\n" +
         "    gt / ge    – greater than / greater or equal\n" +
@@ -49,6 +49,8 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
         "    - Multiple conditions are combined with 'and' only (OR is NOT supported).\n" +
         "    - Always wrap the full expression in parentheses.\n" +
         "    - Numeric values (budget, dates) can be compared with lt/le/gt/ge without quotes.\n" +
+        "    - 'has' is an operator (field has 'value'); do NOT write has(field, 'value').\n" +
+        "    - 'contains(...)' is NOT supported.\n" +
         "\n" +
         "  EXAMPLES:\n" +
         "    Single condition:\n" +
@@ -61,10 +63,10 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
         "      startswith(campaignname, 'Industry')\n" +
         "\n" +
         "    Contains (substring):\n" +
-        "      has(campaignname, 'Fidelity')\n" +
+        "      campaignname has 'Fidelity'\n" +
         "\n" +
         "    Numeric comparison:\n" +
-        "      (campaignbudget gt '1000')\n" +
+        "      (campaignbudget gt 1000)\n" +
         "\n" +
         "  URL equivalent: filter=(agency eq 'EssenceMediacom' and campaignname eq 'Lacer - Pilexil - AO Diciembre')&pageSize=5",
       inputSchema: {
@@ -177,10 +179,7 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
         openWorldHint: true,
       },
     },
-    async (
-      { space, entity, variantId, fields, isCreatedByURL },
-      extra,
-    ) => {
+    async ({ space, entity, variantId, fields, isCreatedByURL }, extra) => {
       if (!auth) return getAuthError(serverUrl);
       try {
         const result = await CreateCampaign(
