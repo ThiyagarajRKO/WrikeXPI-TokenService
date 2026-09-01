@@ -13,6 +13,7 @@ import { adminRoute } from "./routes/admin";
 import { portalRoute } from "./routes/portal";
 import oauthWellKnownRoute from "./routes/oauth/wellKnown";
 import oauthRoute from "./routes/oauth";
+import mcpDocsRoute from "./routes/mcpDocs";
 import { syncSecrets } from "./utils/azure_vault";
 import { findRedirectionURL } from "./utils/wrikeRedirect";
 import {
@@ -48,6 +49,7 @@ import {
   // MCP OAuth (discovery metadata must live at the host root per RFC 8414/9728)
   fastify.register(oauthWellKnownRoute);
   fastify.register(oauthRoute, { prefix: "/oauth" });
+  fastify.register(mcpDocsRoute);
 
   // Hooks
   fastify.addHook("onError", async (request, reply, error) => {
@@ -339,7 +341,27 @@ import {
         border-color: #34d399;
         box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
       }
+
+      .top-nav {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+      }
+      .top-nav a {
+        color: #dddddd;
+        text-decoration: none;
+        font-size: 0.9rem;
+        opacity: 0.85;
+      }
+      .top-nav a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
     </style>
+
+    <div class="top-nav">
+      <a href="${process.env.APP_URL}/mcp-docs">MCP Docs</a>
+    </div>
 
     <div class="env-select-wrapper">
       <label for="envSelect" class="env-select-label">Choose Environment</label>
