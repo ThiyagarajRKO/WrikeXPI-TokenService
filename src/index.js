@@ -14,6 +14,7 @@ import { portalRoute } from "./routes/portal";
 import oauthWellKnownRoute from "./routes/oauth/wellKnown";
 import oauthRoute from "./routes/oauth";
 import mcpDocsRoute from "./routes/mcpDocs";
+import wrikeIconDataUri from "./mcp/wrikeIcon";
 import { syncSecrets } from "./utils/azure_vault";
 import { findRedirectionURL } from "./utils/wrikeRedirect";
 import {
@@ -127,6 +128,18 @@ import {
     } catch (err) {
       res.status(500).send({ success: false, message: err.message || err });
     }
+  });
+
+  // Root-level favicon — several tools (browsers, Claude.ai's connector
+  // list icon lookup, etc.) fetch this conventional path directly rather
+  // than reading the MCP serverInfo.icons field, so serve real bytes here
+  // too (same icon embedded as a data URI in src/mcp/wrikeIcon.js).
+  fastify.get("/favicon.ico", async (req, res) => {
+    const base64 = wrikeIconDataUri.split(",")[1];
+    res
+      .type("image/x-icon")
+      .header("Cache-Control", "public, max-age=86400")
+      .send(Buffer.from(base64, "base64"));
   });
 
   // Generate redirect URL dynamically based on environment selection
