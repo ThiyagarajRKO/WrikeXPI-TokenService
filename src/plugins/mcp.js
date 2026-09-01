@@ -16,14 +16,15 @@ const { resolveAuth } = require("../mcp/tools/auth.js");
  * resolved once per request and threaded into every tool — never a
  * tool-call parameter, so it never touches LLM context.
  *
- * POST /mcp  – JSON-RPC MCP endpoint
- * GET  /mcp  – Health / readiness check
+ * POST /mcp                  – JSON-RPC MCP endpoint (environment picker on connect)
+ * POST /mcp/:environmentId   – Same endpoint, pre-locked to one environment (no picker)
+ * GET  /mcp[/:environmentId] – Health / readiness check
  */
 module.exports = async function (fastify, opts) {
   const serverUrl = process.env.APP_URL || "http://localhost:3000";
-  const resourceMetadataUrl = `${serverUrl}/.well-known/oauth-protected-resource/api/v1/wrikexpi/mcp`;
+  const baseResourceMetadataUrl = `${serverUrl}/.well-known/oauth-protected-resource/api/v1/wrikexpi/mcp`;
 
-  const sendUnauthorized = (reply, description) => {
+  const sendUnauthorized = (reply, description, resourceMetadataUrl) => {
     reply
       .code(401)
       .header(
@@ -33,17 +34,22 @@ module.exports = async function (fastify, opts) {
       .send({ error: "invalid_token", error_description: description });
   };
 
-  // ── MCP POST handler ──────────────────────────────────────────────
-  fastify.post("/mcp", async (req, reply) => {
+  // Shared POST handler for both /mcp and /mcp/:environmentId — auth
+  // resolution and tool wiring are identical either way (the bearer token
+  // already carries its own environment from when it was minted); only the
+  // resource_metadata URL advertised on a 401 differs, so OAuth discovery
+  // for the env-specific route points at env-specific authorize metadata
+  // (see routes/oauth/wellKnown.js) instead of the generic picker flow.
+  const handleMcpPost = (resourceMetadataUrl) => async (req, reply) => {
     const authHeader = req.headers.authorization || "";
     const [scheme, token] = authHeader.split(" ");
     if (scheme?.toLowerCase() !== "bearer" || !token) {
-      return sendUnauthorized(reply, "Authorization required");
+      return sendUnauthorized(reply, "Authorization required", resourceMetadataUrl);
     }
 
     const auth = await resolveAuth(token);
     if (!auth) {
-      return sendUnauthorized(reply, "Token is invalid or expired");
+      return sendUnauthorized(reply, "Token is invalid or expired", resourceMetadataUrl);
     }
 
     if (typeof reply.hijack === "function") reply.hijack();
@@ -75,13 +81,26 @@ module.exports = async function (fastify, opts) {
         }),
       );
     }
-  });
+  };
+
+  fastify.post("/mcp", handleMcpPost(baseResourceMetadataUrl));
+  fastify.post("/mcp/:environmentId", (req, reply) =>
+    handleMcpPost(`${baseResourceMetadataUrl}/${req.params.environmentId}`)(req, reply),
+  );
 
   // ── MCP GET health endpoint ──────────────────────────────────────
   fastify.get("/mcp", async (req, reply) => {
     reply.send({
       success: true,
       message: "WrikeXPI MCP endpoint is ready.",
+      transport: "streamable-http",
+      protocol: "Model Context Protocol",
+    });
+  });
+  fastify.get("/mcp/:environmentId", async (req, reply) => {
+    reply.send({
+      success: true,
+      message: `WrikeXPI MCP endpoint is ready (environment ${req.params.environmentId}).`,
       transport: "streamable-http",
       protocol: "Model Context Protocol",
     });

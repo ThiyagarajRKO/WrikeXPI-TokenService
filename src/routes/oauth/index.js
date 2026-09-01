@@ -198,11 +198,22 @@ export const oauthRoute = (fastify, opts, done) => {
         });
       }
 
+      const visibleCreds = getCachedVisibleWrikeCredentials();
+
       if (!environment_id) {
-        const visibleCreds = getCachedVisibleWrikeCredentials();
         return reply
           .type("text/html")
           .send(renderEnvironmentPicker({ visibleCreds, query: req.query }));
+      }
+
+      const knownEnv = Object.values(visibleCreds || {}).find(
+        (c) => String(c.id) === String(environment_id),
+      );
+      if (!knownEnv) {
+        return reply.code(400).send({
+          error: "invalid_request",
+          error_description: `Unknown environment_id: ${environment_id}`,
+        });
       }
 
       const { redirectUrl } = findRedirectionURL(
