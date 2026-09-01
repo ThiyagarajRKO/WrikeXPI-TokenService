@@ -14,6 +14,7 @@ import { portalRoute } from "./routes/portal";
 import oauthWellKnownRoute from "./routes/oauth/wellKnown";
 import oauthRoute from "./routes/oauth";
 import mcpDocsRoute from "./routes/mcpDocs";
+import docsRoute from "./routes/docs";
 import wrikeIconDataUri from "./mcp/wrikeIcon";
 import { syncSecrets } from "./utils/azure_vault";
 import { findRedirectionURL } from "./utils/wrikeRedirect";
@@ -51,6 +52,7 @@ import {
   fastify.register(oauthWellKnownRoute);
   fastify.register(oauthRoute, { prefix: "/oauth" });
   fastify.register(mcpDocsRoute);
+  fastify.register(docsRoute);
 
   // Hooks
   fastify.addHook("onError", async (request, reply, error) => {
@@ -315,6 +317,10 @@ import {
   </style>
 </head>
 <body>
+  <div class="top-nav">
+      <a href="${process.env.APP_URL}/docs/mcp">MCP Docs</a>
+      <a href="${process.env.APP_URL}/docs/api">API Docs</a>
+  </div>
   <div class="card">
     <div class="logo"><span>W</span></div>
     <h1>Connect Your Wrike Account</h1>
@@ -359,22 +365,24 @@ import {
         position: fixed;
         top: 20px;
         right: 24px;
+        z-index: 50;
+        display: flex;
+        gap: 18px;
       }
       .top-nav a {
-        color: #dddddd;
+        color: #ffffff;
         text-decoration: none;
-        font-size: 0.9rem;
-        opacity: 0.85;
+        font-size: 0.92rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        transition: opacity 0.2s ease;
       }
       .top-nav a:hover {
-        opacity: 1;
+        opacity: 0.8;
         text-decoration: underline;
       }
     </style>
-
-    <div class="top-nav">
-      <a href="${process.env.APP_URL}/mcp-docs">MCP Docs</a>
-    </div>
 
     <div class="env-select-wrapper">
       <label for="envSelect" class="env-select-label">Choose Environment</label>

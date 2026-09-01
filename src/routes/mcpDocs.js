@@ -12,7 +12,10 @@ const {
  * GET /mcp-docs
  */
 module.exports = async function (fastify, opts) {
+  // MCP docs moved into the unified documentation hub (/docs). This route is
+  // kept for backwards compatibility and deep-links to the MCP section.
   fastify.get("/mcp-docs", async (req, reply) => {
+    return reply.redirect("/docs/mcp");
     const appUrl = process.env.APP_URL || "http://localhost:3000";
     const baseMcpUrl = `${appUrl}/api/v1/wrikexpi/mcp`;
 
