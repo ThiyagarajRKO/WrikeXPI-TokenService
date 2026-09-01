@@ -61,6 +61,30 @@ export const tokenRoute = (fastify, opts, done) => {
         decodedData = fastify.jwt.verify(req.query.state);
 
         if (decodedData.redirectUri) {
+          // MCP OAuth flow (/oauth/authorize set code_challenge in state): wrap
+          // Wrike's raw code in a short-lived signed JWT carrying the PKCE
+          // challenge, so /oauth/token can verify code_verifier before ever
+          // spending it — the MCP client never sees Wrike's raw code.
+          if (decodedData.code_challenge) {
+            const wrappedCode = fastify.jwt.sign(
+              {
+                wrikeCode: req.query.code,
+                environmentId: decodedData.environmentId,
+                code_challenge: decodedData.code_challenge,
+                code_challenge_method: decodedData.code_challenge_method,
+                redirect_uri: decodedData.redirectUri,
+              },
+              { expiresIn: "60s" },
+            );
+
+            const relayUrl = new URL(decodedData.redirectUri);
+            relayUrl.searchParams.set("code", wrappedCode);
+            if (decodedData.client_state) {
+              relayUrl.searchParams.set("state", decodedData.client_state);
+            }
+            return reply.redirect(relayUrl.toString());
+          }
+
           // Construct the final redirect URL
           const redirectUrl = `${decodedData.redirectUri}?code=${req.query.code}&environmentId=${decodedData?.environmentId || null}`;
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getDatahubCustomFields } from "../../utils/wrike";
-import { getAuthError, resolveAuth, authTokenField } from "./auth.js";
+import { getAuthError } from "./auth.js";
 
 const normalizeFieldMap = (fieldMapping = {}) => {
   if (!fieldMapping || typeof fieldMapping !== "object") return {};
@@ -23,8 +23,9 @@ const normalizeFieldMap = (fieldMapping = {}) => {
  *
  * @param {import("@modelcontextprotocol/sdk/server/mcp.js").McpServer} server
  * @param {string} serverUrl
+ * @param {{wrikeToken: string, environmentName: string}} auth
  */
-export const registerDatahubTools = (server, serverUrl) => {
+export const registerDatahubTools = (server, serverUrl, auth) => {
   server.registerTool(
     "datahub_list_fields",
 
@@ -35,15 +36,13 @@ export const registerDatahubTools = (server, serverUrl) => {
         "(isCampaignField, isChannelField, isTaskField, isWritable, isReadable) before " +
         "invoking update or create operations.",
       inputSchema: {
-        auth_token: authTokenField,
         includeMetadata: z
           .boolean()
           .optional()
           .describe("Include raw metadata alongside field definitions"),
       },
     },
-    async ({ auth_token, includeMetadata }, extra) => {
-      const auth = await resolveAuth(auth_token);
+    async ({ includeMetadata }, extra) => {
       if (!auth) return getAuthError(serverUrl);
 
       try {

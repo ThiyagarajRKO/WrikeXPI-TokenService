@@ -5,22 +5,47 @@ const {
   StreamableHTTPServerTransport,
 } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const { createMcpServer } = require("../mcp/index.js");
+const { resolveAuth } = require("../mcp/tools/auth.js");
 
 /**
  * Fastify plugin that exposes the MCP (Model Context Protocol) endpoint.
  *
  * Each POST request gets a fresh server + transport so multiple agents
- * can connect simultaneously. Auth is token-based (passed as auth_token
- * to each tool), so no session state is shared between requests.
+ * can connect simultaneously. Auth is a bearer token on the HTTP
+ * Authorization header (obtained via the MCP OAuth flow at /oauth/*),
+ * resolved once per request and threaded into every tool — never a
+ * tool-call parameter, so it never touches LLM context.
  *
  * POST /mcp  – JSON-RPC MCP endpoint
  * GET  /mcp  – Health / readiness check
  */
 module.exports = async function (fastify, opts) {
   const serverUrl = process.env.APP_URL || "http://localhost:3000";
+  const resourceMetadataUrl = `${serverUrl}/.well-known/oauth-protected-resource/api/v1/wrikexpi/mcp`;
+
+  const sendUnauthorized = (reply, description) => {
+    reply
+      .code(401)
+      .header(
+        "WWW-Authenticate",
+        `Bearer error="invalid_token", error_description="${description}", resource_metadata="${resourceMetadataUrl}"`,
+      )
+      .send({ error: "invalid_token", error_description: description });
+  };
 
   // ── MCP POST handler ──────────────────────────────────────────────
   fastify.post("/mcp", async (req, reply) => {
+    const authHeader = req.headers.authorization || "";
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme?.toLowerCase() !== "bearer" || !token) {
+      return sendUnauthorized(reply, "Authorization required");
+    }
+
+    const auth = await resolveAuth(token);
+    if (!auth) {
+      return sendUnauthorized(reply, "Token is invalid or expired");
+    }
+
     if (typeof reply.hijack === "function") reply.hijack();
 
     try {
@@ -34,7 +59,7 @@ module.exports = async function (fastify, opts) {
       }
 
       // Fresh server + transport per request — no shared session state
-      const server = createMcpServer(fastify, serverUrl);
+      const server = createMcpServer(fastify, serverUrl, auth);
       const transport = new StreamableHTTPServerTransport({
         enableJsonResponse: true,
       });

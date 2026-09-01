@@ -3,17 +3,19 @@ import { registerCampaignTools } from "./tools/campaign.js";
 import { registerChannelTools } from "./tools/channel.js";
 import { registerTaskTools } from "./tools/task.js";
 import { registerDatahubTools } from "./tools/datahub.js";
-import { registerAuthTools } from "./tools/auth.js";
 
 /**
  * Create a fully-configured MCP server with all tools registered.
- * Authentication is done via auth_token passed directly to each tool.
+ * Authentication is resolved once per HTTP request (bearer token, see
+ * src/plugins/mcp.js) and passed in as `auth` — tools no longer accept
+ * an auth_token parameter of their own.
  *
  * @param {object} fastify - Fastify instance
- * @param {string} serverUrl - Base URL for auth instructions
+ * @param {string} serverUrl - Base URL for auth error messages
+ * @param {{wrikeToken: string, environmentName: string}} auth - Resolved auth for this request
  * @returns {McpServer}
  */
-export const createMcpServer = (fastify, serverUrl) => {
+export const createMcpServer = (fastify, serverUrl, auth) => {
   const server = new McpServer(
     {
       name: "wrikexpi-mcp",
@@ -26,14 +28,10 @@ export const createMcpServer = (fastify, serverUrl) => {
     },
   );
 
-  // Auth tools
-  registerAuthTools(server, serverUrl);
-
-  // All other tools
-  registerCampaignTools(server, fastify, serverUrl);
-  registerChannelTools(server, serverUrl);
-  registerTaskTools(server, serverUrl);
-  registerDatahubTools(server, serverUrl);
+  registerCampaignTools(server, fastify, serverUrl, auth);
+  registerChannelTools(server, serverUrl, auth);
+  registerTaskTools(server, serverUrl, auth);
+  registerDatahubTools(server, serverUrl, auth);
 
   return server;
 };

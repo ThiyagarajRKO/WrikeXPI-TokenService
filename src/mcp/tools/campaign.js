@@ -4,7 +4,7 @@ import { GetCampaign } from "../../routes/campaign/handlers/getCampaign";
 import { CreateCampaign } from "../../routes/campaign/handlers/createCampaign";
 import { UpdateCampaign } from "../../routes/campaign/handlers/updateCampaign";
 import { DeleteCampaign } from "../../routes/campaign/handlers/deleteCampaign";
-import { getAuthError, resolveAuth, authTokenField } from "./auth.js";
+import { getAuthError } from "./auth.js";
 
 const serializeResult = (result) => {
   if (!result) return { success: true, data: null };
@@ -17,13 +17,14 @@ const serializeResult = (result) => {
 
 /**
  * Register all campaign-related MCP tools on the given server instance.
- * Auth is resolved from the auth_token parameter passed to each tool.
+ * Auth is resolved once per HTTP request (see src/plugins/mcp.js) and passed in.
  *
  * @param {import("@modelcontextprotocol/sdk/server/mcp.js").McpServer} server
  * @param {object} fastify
  * @param {string} serverUrl
+ * @param {{wrikeToken: string, environmentName: string}} auth
  */
-export const registerCampaignTools = (server, fastify, serverUrl) => {
+export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
   server.registerTool(
     "campaign_list",
 
@@ -67,7 +68,6 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
         "\n" +
         "  URL equivalent: filter=(agency eq 'EssenceMediacom' and campaignname eq 'Lacer - Pilexil - AO Diciembre')&pageSize=5",
       inputSchema: {
-        auth_token: authTokenField,
         filter: z
           .string()
           .optional()
@@ -87,8 +87,7 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
           .describe("Token for the next page of results"),
       },
     },
-    async ({ auth_token, filter, pageSize, nextPageToken }, extra) => {
-      const auth = await resolveAuth(auth_token);
+    async ({ filter, pageSize, nextPageToken }, extra) => {
       if (!auth) return getAuthError(serverUrl);
       try {
         const result = await GetAllCampaigns(
@@ -116,12 +115,10 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
     {
       description: "Read a single campaign by its Wrike folder ID.",
       inputSchema: {
-        auth_token: authTokenField,
         campaignId: z.string().describe("The Wrike folder ID of the campaign"),
       },
     },
-    async ({ auth_token, campaignId }, extra) => {
-      const auth = await resolveAuth(auth_token);
+    async ({ campaignId }, extra) => {
       if (!auth) return getAuthError(serverUrl);
       try {
         const result = await GetCampaign(
@@ -150,7 +147,6 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
       description:
         "Create a campaign using the existing request-form workflow. Requires space, entity, variantId, and optional fields.",
       inputSchema: {
-        auth_token: authTokenField,
         space: z.string().describe("Wrike space identifier"),
         entity: z.string().describe("Entity type for the request form"),
         variantId: z.number().int().describe("Variant ID for the request form"),
@@ -165,10 +161,9 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
       },
     },
     async (
-      { auth_token, space, entity, variantId, fields, isCreatedByURL },
+      { space, entity, variantId, fields, isCreatedByURL },
       extra,
     ) => {
-      const auth = await resolveAuth(auth_token);
       if (!auth) return getAuthError(serverUrl);
       try {
         const result = await CreateCampaign(
@@ -204,7 +199,6 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
       description:
         "Update a campaign by its Wrike folder ID. Provide formFields as a key-value object of field names to values.",
       inputSchema: {
-        auth_token: authTokenField,
         campaignId: z.string().describe("The Wrike folder ID of the campaign"),
         formFields: z
           .record(z.any())
@@ -212,8 +206,7 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
           .describe("Key-value map of field names to new values"),
       },
     },
-    async ({ auth_token, campaignId, formFields }, extra) => {
-      const auth = await resolveAuth(auth_token);
+    async ({ campaignId, formFields }, extra) => {
       if (!auth) return getAuthError(serverUrl);
       try {
         const result = await UpdateCampaign(
@@ -241,12 +234,10 @@ export const registerCampaignTools = (server, fastify, serverUrl) => {
     {
       description: "Delete a campaign by its Wrike folder ID.",
       inputSchema: {
-        auth_token: authTokenField,
         campaignId: z.string().describe("The Wrike folder ID of the campaign"),
       },
     },
-    async ({ auth_token, campaignId }, extra) => {
-      const auth = await resolveAuth(auth_token);
+    async ({ campaignId }, extra) => {
       if (!auth) return getAuthError(serverUrl);
       try {
         const result = await DeleteCampaign(

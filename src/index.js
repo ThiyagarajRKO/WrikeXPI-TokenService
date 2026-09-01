@@ -11,77 +11,14 @@ dotenv.config();
 import { PrivateRouters, PublicRouters } from "./routes";
 import { adminRoute } from "./routes/admin";
 import { portalRoute } from "./routes/portal";
+import oauthWellKnownRoute from "./routes/oauth/wellKnown";
+import oauthRoute from "./routes/oauth";
 import { syncSecrets } from "./utils/azure_vault";
+import { findRedirectionURL } from "./utils/wrikeRedirect";
 import {
   syncWrikeCredentialsFromDB,
-  getCachedWrikeCredentials,
   getCachedVisibleWrikeCredentials,
 } from "./utils/wrikeCredentials";
-
-const findRedirectionURL = (
-  { accountId, redirectUri, autoRedirect, environment, environmentId },
-  fastify,
-) => {
-  try {
-    const { WRIKE_LOGIN_ENDPOINT, WRIKE_REDIRECT_URL } = process.env;
-
-    if (!WRIKE_LOGIN_ENDPOINT) {
-      throw new Error(
-        "Missing WRIKE_LOGIN_ENDPOINT! Please contact your admin",
-      );
-    }
-
-    // Get credentials from cached DB values (API type)
-    const allCreds = getCachedWrikeCredentials();
-
-    // Resolve environment: prioritize environmentId parameter, then environment parameter
-    let selectedEnvironment = "";
-    if (environmentId) {
-      // Find environment by ID
-      for (const [envName, envData] of Object.entries(allCreds || {})) {
-        if (envData?.id == environmentId) {
-          selectedEnvironment = envName;
-          break;
-        }
-      }
-    } else if (environment) {
-      selectedEnvironment = environment;
-    }
-
-    const defaultEnvKey = Object.keys(allCreds)[0];
-    const selectedCred = selectedEnvironment
-      ? allCreds?.[selectedEnvironment]
-      : allCreds[defaultEnvKey];
-    const WRIKE_CLIENT_ID = selectedCred?.clientId;
-
-    if (!WRIKE_CLIENT_ID) {
-      return res.status(400).send({
-        message: "Missing WRIKE_CLIENT_ID. Please contact your admin",
-      });
-    }
-
-    let state = "";
-    if (redirectUri) {
-      state = fastify.jwt.sign({
-        redirectUri,
-        environmentId: selectedCred ? selectedCred?.id : "",
-      });
-    } else {
-      state = fastify.jwt.sign({
-        environmentId: selectedCred ? selectedCred?.id : "",
-      });
-    }
-
-    let redirectUrl = `${WRIKE_LOGIN_ENDPOINT}/authorize/v4?client_id=${WRIKE_CLIENT_ID}&response_type=code&state=${state}&redirect_uri=${WRIKE_REDIRECT_URL}`;
-
-    const accountIdToUse = selectedCred?.accountId || accountId;
-    if (accountIdToUse) redirectUrl += `&accountId=${accountIdToUse}`;
-
-    return { redirectUrl, selectedEnvironment };
-  } catch (err) {
-    throw err;
-  }
-};
 
 (async () => {
   // Configure the framework and instantiate it
@@ -107,6 +44,10 @@ const findRedirectionURL = (
   fastify.register(PrivateRouters, { prefix: "/api/v1" });
   fastify.register(adminRoute, { prefix: "/admin" });
   fastify.register(portalRoute, { prefix: "/portal" });
+
+  // MCP OAuth (discovery metadata must live at the host root per RFC 8414/9728)
+  fastify.register(oauthWellKnownRoute);
+  fastify.register(oauthRoute, { prefix: "/oauth" });
 
   // Hooks
   fastify.addHook("onError", async (request, reply, error) => {
