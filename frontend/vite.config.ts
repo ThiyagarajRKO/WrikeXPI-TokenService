@@ -32,6 +32,7 @@ export default defineConfig(({ command }) => {
           "portal-dashboard": path.resolve(root, "portal-dashboard.html"),
           "portal-home": path.resolve(root, "portal-home.html"),
           "root-login": path.resolve(root, "root-login.html"),
+          "admin-dashboard": path.resolve(root, "admin-dashboard.html"),
         },
       },
     },

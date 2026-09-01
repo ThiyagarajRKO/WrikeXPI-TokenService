@@ -18,6 +18,46 @@ export const setAccessToken = (token: string): void => {
   localStorage.setItem(ACCESS_TOKEN_KEY, token);
 };
 
+export const clearAdminSession = (): void => {
+  localStorage.clear();
+};
+
+/**
+ * Bearer-token fetch wrapper for the admin dashboard — mirrors the EJS
+ * page's global fetch interceptor (views/admin/dashboard.ejs): on any 401 or
+ * 403 response it clears localStorage, redirects to /admin/login, and
+ * rejects so calling code's `await` never resolves with the stale response.
+ */
+export const adminFetch = async (
+  input: string,
+  init: RequestInit = {},
+): Promise<Response> => {
+  const token = getAccessToken();
+  const headers = new Headers(init.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  const response = await fetch(input, { ...init, headers });
+
+  if (response.status === 401 || response.status === 403) {
+    clearAdminSession();
+    window.location.replace("/admin/login");
+    throw new Error("Session expired or unauthorized");
+  }
+
+  return response;
+};
+
+/**
+ * POST /api/v1/admin/logout — same JSON API the EJS page already calls.
+ */
+export const adminLogout = async (): Promise<void> => {
+  try {
+    await adminFetch("/api/v1/admin/logout", { method: "POST" });
+  } finally {
+    clearAdminSession();
+  }
+};
+
 export const setTotpToken = (token: string): void => {
   sessionStorage.setItem(TOTP_TOKEN_KEY, token);
 };
