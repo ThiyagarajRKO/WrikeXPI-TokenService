@@ -19,7 +19,16 @@ export const createMcpServer = (fastify, serverUrl, auth) => {
   const server = new McpServer(
     {
       name: "wrikexpi-mcp",
+      title: "WrikeXPI",
       version: "1.0.0",
+      description: "Manage Wrike XPI campaigns, channels, tasks, and Datahub fields.",
+      websiteUrl: serverUrl,
+      icons: [
+        {
+          src: "https://cdn.wrike.com/static/branding/wrike/favicons/favicon.ico",
+          mimeType: "image/x-icon",
+        },
+      ],
     },
     {
       capabilities: {
