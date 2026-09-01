@@ -6,9 +6,11 @@ import { adminCacheRoute } from "./cache";
 // Page handlers
 const AdminIndexPage = (req, reply) => reply.redirect("/admin/login");
 
+// Served from the React build (frontend/ -> public/app/, see
+// src/plugins/appStatic.js) instead of an EJS template.
 const AdminLoginPage = (req, reply) => {
   try {
-    return reply.view("admin/login", {});
+    return reply.sendFile("admin-login.html", process.cwd() + "/public/app");
   } catch (err) {
     return reply.code(500).send({ error: "Failed to load login page" });
   }
@@ -16,7 +18,7 @@ const AdminLoginPage = (req, reply) => {
 
 const AdminTOTPPage = (req, reply) => {
   try {
-    return reply.view("admin/totp", {});
+    return reply.sendFile("admin-totp.html", process.cwd() + "/public/app");
   } catch (err) {
     return reply.code(500).send({ error: "Failed to load TOTP page" });
   }

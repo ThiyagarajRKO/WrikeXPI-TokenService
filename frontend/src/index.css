@@ -1,0 +1,18 @@
+/*
+  Minimal global reset only. Each page owns its complete original visual
+  design in its own stylesheet (e.g. pages/Login.css) — no shared design
+  system is imposed here, since every migrated page must look exactly like
+  its original, not a unified redesign.
+*/
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
