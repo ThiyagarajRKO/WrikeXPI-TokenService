@@ -5,10 +5,9 @@ const {
 } = require("../utils/wrikeCredentials");
 
 /**
- * Human-facing documentation page explaining how to connect an MCP client
- * (Claude Desktop, Claude.ai, mcp-remote, MCP Inspector, ...) to this
- * server's MCP endpoint, with copy-able URLs for the generic (environment
- * picker) connection and one per configured Wrike environment.
+ * MCP connection page: plain-language explanation of what's happening,
+ * plus an interactive environment picker (dropdown) that drives a single
+ * copy-able connection URL (generic, or locked to one environment).
  *
  * GET /mcp-docs
  */
@@ -18,32 +17,55 @@ module.exports = async function (fastify, opts) {
     const baseMcpUrl = `${appUrl}/api/v1/wrikexpi/mcp`;
 
     const visibleCreds = getCachedVisibleWrikeCredentials();
-    const envCards = Object.entries(visibleCreds || {})
-      .map(([envName, envData]) => {
-        const url = `${baseMcpUrl}/${envData.id}`;
-        const id = `url-${envData.id}`;
-        return `
-              <div class="env-card">
-                <div class="env-card-head">
-                  <span class="env-dot"></span>
-                  <span class="env-name">${envName}</span>
-                </div>
-                ${urlRow(id, url)}
-              </div>`;
-      })
+    const specificEnvironments = Object.entries(visibleCreds || {}).map(
+      ([envName, envData]) => ({
+        key: String(envData.id),
+        label: envName,
+        url: `${baseMcpUrl}/${envData.id}`,
+      }),
+    );
+
+    const optionsHtml = specificEnvironments
+      .map((env) => `<option value="${env.key}">${env.label}</option>`)
       .join("");
 
-    function urlRow(id, url) {
-      return `
-                <div class="url-row">
-                  <code id="${id}">${url}</code>
-                  <button class="copy-btn" onclick="copyUrl('${id}', this)" aria-label="Copy URL">
-                    <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" hidden><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span class="copy-label">Copy</span>
-                  </button>
-                </div>`;
-    }
+    const steps = [
+      {
+        title: "Copy your link",
+        text: "Choose your environment below and copy the link. It's a private web address just for connecting your assistant to Wrike.",
+        icon: `<path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07"></path>`,
+      },
+      {
+        title: "Paste it into your assistant",
+        text: "Open your AI assistant (like Claude) and add the link as a new connection or tool.",
+        icon: `<path d="M12 2v4"></path><path d="m6.8 5.4 2.8 2.8"></path><path d="M2 12h4"></path><rect x="8" y="8" width="8" height="8" rx="2"></rect><path d="m17.2 5.4-2.8 2.8"></path><path d="M22 12h-4"></path><path d="m17.2 18.6-2.8-2.8"></path><path d="M12 18v4"></path><path d="m6.8 18.6 2.8-2.8"></path>`,
+      },
+      {
+        title: "Sign in with Wrike",
+        text: "A window pops up asking you to log in — the same way you'd sign into any website. Nothing to copy or remember.",
+        icon: `<rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>`,
+      },
+      {
+        title: "You're connected",
+        text: "That's it. Your assistant can now securely work with your Wrike campaigns whenever you ask it to.",
+        icon: `<path d="M20 6 9 17l-5-5"></path>`,
+      },
+    ];
+
+    const stepsHtml = steps
+      .map(
+        (s, i) => `
+              <li class="step" style="--i:${i}">
+                <span class="step-node">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${s.icon}</svg>
+                </span>
+                <div class="step-body">
+                  <h3>${s.title}</h3>
+                  <p>${s.text}</p>
+                </div>
+              </li>`,
+      )
+      .join("");
 
     const html = `
 <!DOCTYPE html>
@@ -51,246 +73,322 @@ module.exports = async function (fastify, opts) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Connect an MCP Client</title>
+  <title>MCP Connection</title>
   <link rel="icon" href="https://cdn.wrike.com/static/branding/wrike/favicons/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-1: #14121f;
-      --bg-2: #1c1830;
-      --surface: rgba(255, 255, 255, 0.045);
-      --surface-2: rgba(255, 255, 255, 0.07);
-      --border: rgba(255, 255, 255, 0.10);
-      --border-soft: rgba(255, 255, 255, 0.07);
-      --text: #f1f0f6;
-      --text-dim: #a3a0b8;
-      --text-faint: #7b7893;
-      --accent: #6ee7a8;
-      --accent-strong: #34d399;
-      --mono: 'SF Mono', 'Cascadia Code', Consolas, monospace;
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-2: #f2f2f0;
+      --border: #e2e1dc;
+      --text: #1a1a18;
+      --text-dim: #6b6a63;
+      --text-faint: #9b9a92;
+      --primary: #4CAF50;
+      --primary-hover: #429a46;
+      --primary-bg: #edf7ee;
+      --primary-border: #bfe3c2;
+      --accent: var(--primary);
+      --accent-bg: var(--primary-bg);
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+      --sans: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+      --display: 'Space Grotesk', var(--sans);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
-    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    html { scrollbar-width: thin; scrollbar-color: #d6d5cf transparent; }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.24); background-clip: padding-box; }
+    ::-webkit-scrollbar-thumb { background: #d6d5cf; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #c2c1b9; }
 
     body {
       font-family: var(--sans);
       min-height: 100vh;
-      background:
-        radial-gradient(1100px 520px at 12% -8%, rgba(110, 231, 168, 0.10), transparent 60%),
-        radial-gradient(900px 480px at 88% 8%, rgba(147, 141, 214, 0.14), transparent 55%),
-        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      background: var(--bg);
       color: var(--text);
-      padding: 56px 20px 80px;
+      padding: 48px 32px 80px;
     }
 
-    .wrap { max-width: 760px; margin: 0 auto; }
+    .wrap { max-width: 900px; margin: 0 auto; }
 
     .top-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 40px;
+      margin-bottom: 56px;
     }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: 0.2px; color: var(--text); font-size: 0.95rem; }
+    .brand {
+      display: flex; align-items: center; gap: 9px;
+      font-family: var(--display);
+      font-weight: 700; font-size: 0.95rem; letter-spacing: -0.01em;
+    }
     .brand-mark {
-      width: 26px; height: 26px; border-radius: 8px;
-      background: linear-gradient(135deg, var(--accent), #4f9dde);
+      width: 22px; height: 22px; border-radius: 6px;
+      background: var(--primary);
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.8rem; font-weight: 800; color: #0c1c14;
+      font-family: var(--display); font-size: 0.72rem; font-weight: 700; color: #fff;
     }
     .top-nav a {
       color: var(--text-dim);
       text-decoration: none;
-      font-size: 0.85rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: color 0.15s ease;
+      font-size: 0.82rem;
+      display: inline-flex; align-items: center; gap: 5px;
     }
     .top-nav a:hover { color: var(--text); }
 
-    .hero {
-      margin-bottom: 32px;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-      background: rgba(110, 231, 168, 0.12);
-      color: var(--accent);
-      border: 1px solid rgba(110, 231, 168, 0.25);
-      padding: 5px 12px;
-      border-radius: 999px;
-      margin-bottom: 18px;
-    }
+    header.page-head { max-width: 60ch; margin-bottom: 56px; }
     h1 {
+      font-family: var(--display);
       font-size: 2rem;
-      font-weight: 700;
+      font-weight: 600;
       letter-spacing: -0.02em;
       margin-bottom: 12px;
     }
-    .hero p {
+    .lede {
       font-size: 1rem;
       color: var(--text-dim);
       line-height: 1.65;
-      max-width: 58ch;
-    }
-    .hero code.inline {
-      background: rgba(255,255,255,0.08);
-      padding: 2px 7px;
-      border-radius: 5px;
-      font-family: var(--mono);
-      font-size: 0.85em;
-      color: #d9d6ee;
     }
 
-    .steps {
-      list-style: none;
-      display: grid;
-      gap: 14px;
-      margin: 28px 0 0;
-    }
-    .step {
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-    .step-num {
-      flex-shrink: 0;
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; font-weight: 700; color: var(--accent);
-    }
-    .step p {
-      font-size: 0.92rem;
-      color: var(--text-dim);
-      line-height: 1.55;
-      padding-top: 2px;
-    }
-
-    .section {
-      margin-top: 40px;
-    }
-    .section-head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .section-head h2 {
-      font-size: 0.82rem;
-      font-weight: 700;
+    section { margin-bottom: 44px; }
+    .eyebrow {
+      font-family: var(--display);
+      font-size: 0.74rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.07em;
       color: var(--text-faint);
+      margin-bottom: 8px;
     }
-    .section-head .hint {
-      font-size: 0.8rem;
-      color: var(--text-faint);
+    .section-title {
+      font-family: var(--display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 20px;
     }
 
     .panel {
       background: var(--surface);
-      border: 1px solid var(--border-soft);
-      border-radius: 16px;
-      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px;
     }
 
-    .url-row {
+    /* Animated stepper */
+    .steps {
+      list-style: none;
+      position: relative;
+    }
+    .steps::before {
+      content: "";
+      position: absolute;
+      left: 19px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+      transform-origin: top;
+      transform: scaleY(0);
+      animation: lineGrow 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
+    }
+    @keyframes lineGrow {
+      to { transform: scaleY(1); }
+    }
+    .step {
+      position: relative;
+      display: flex;
+      gap: 18px;
+      padding-bottom: 28px;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: stepIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation-delay: calc(0.25s + var(--i) * 0.16s);
+    }
+    .step:last-child { padding-bottom: 0; }
+    @keyframes stepIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .step-node {
+      flex-shrink: 0;
+      z-index: 1;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-faint);
+      transform: scale(0.6);
+      animation: nodePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: calc(0.35s + var(--i) * 0.16s);
+    }
+    @keyframes nodePop {
+      to { transform: scale(1); }
+    }
+    .step-node svg { width: 17px; height: 17px; }
+    .step:nth-child(4) .step-node {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+    .step-body { padding-top: 6px; }
+    .step-body h3 {
+      font-family: var(--display);
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .step-body p {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      max-width: 52ch;
+    }
+
+    /* Connection mode toggle */
+    .mode-toggle {
+      display: inline-flex;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 24px;
+      gap: 2px;
+    }
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.83rem;
+      padding: 8px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.14s ease, color 0.14s ease;
+    }
+    .mode-btn:hover { color: var(--text); }
+    .mode-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(20, 19, 24, 0.08);
+    }
+
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; animation: modeIn 0.25s ease; }
+    @keyframes modeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .mode-desc {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      max-width: 52ch;
+    }
+
+    /* Environment picker */
+    .field-label {
+      font-family: var(--display);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+      margin-bottom: 10px;
+    }
+    .select-wrap {
+      position: relative;
+      margin-bottom: 18px;
+      max-width: 360px;
+    }
+    .select-wrap svg.chevron {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      width: 15px; height: 15px;
+      color: var(--text-faint);
+      pointer-events: none;
+    }
+    select#env-select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 12px 40px 12px 14px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: border-color 0.12s ease;
+    }
+    select#env-select:hover { border-color: #c7c6bf; }
+    select#env-select:focus { outline: none; border-color: var(--accent); }
+
+    .url-box {
+      display: flex;
+      align-items: stretch;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .url-box code {
+      flex: 1;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      transition: background 0.15s ease;
-    }
-    .url-row:hover { background: rgba(255,255,255,0.03); }
-
-    .url-row code {
-      flex: 1;
+      padding: 14px 16px;
       font-family: var(--mono);
-      font-size: 0.83rem;
-      color: #d4d2e6;
-      line-height: 1.5;
+      font-size: 0.85rem;
+      color: var(--text);
       word-break: break-all;
       overflow-wrap: anywhere;
     }
-
     .copy-btn {
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text);
+      background: var(--primary);
+      border: none;
+      color: #fff;
       font-family: var(--sans);
       font-weight: 600;
       font-size: 0.8rem;
-      padding: 7px 12px;
-      border-radius: 9px;
+      padding: 0 18px;
       cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      transition: background 0.12s ease;
     }
-    .copy-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.22); }
-    .copy-btn.copied { background: rgba(110, 231, 168, 0.16); border-color: rgba(110, 231, 168, 0.4); color: var(--accent); }
-    .icon-copy, .icon-check { width: 14px; height: 14px; }
+    .copy-btn:hover { background: var(--primary-hover); }
+    .copy-btn.copied { background: #2e7d32; }
+    .icon-copy, .icon-check { width: 13px; height: 13px; }
     .copy-btn.copied .icon-copy { display: none; }
     .copy-btn.copied .icon-check { display: inline-block !important; }
 
-    .env-grid {
-      display: grid;
-      gap: 10px;
-    }
-    .env-card {
-      background: var(--surface);
-      border: 1px solid var(--border-soft);
-      border-radius: 16px;
-      padding: 6px;
-    }
-    .env-card-head {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px 2px;
-    }
-    .env-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--accent-strong);
-      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18);
-    }
-    .env-name {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .footnote {
-      margin-top: 36px;
+    .picker-note {
+      margin-top: 12px;
       font-size: 0.8rem;
       color: var(--text-faint);
-      line-height: 1.6;
-      border-top: 1px solid var(--border-soft);
-      padding-top: 20px;
+      line-height: 1.5;
     }
 
-    @media (max-width: 520px) {
+    @media (max-width: 720px) {
+      body { padding: 40px 20px 60px; }
+      .panel { padding: 22px; }
       h1 { font-size: 1.6rem; }
-      .copy-label { display: none; }
-      .copy-btn { padding: 8px; }
+    }
+    @media (max-width: 480px) {
+      .copy-btn .copy-label { display: none; }
+      .copy-btn { padding: 0 14px; }
     }
   </style>
 </head>
@@ -302,73 +400,113 @@ module.exports = async function (fastify, opts) {
         <span>WrikeXPI</span>
       </div>
       <a href="${appUrl}/">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-        Back to login
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Back
       </a>
     </div>
 
-    <div class="hero">
-      <span class="badge">No copy-paste tokens</span>
-      <h1>Connect an MCP Client</h1>
-      <p>
-        This server exposes a Model Context Protocol (MCP) endpoint that any MCP-compliant
-        client — Claude Desktop, Claude.ai Connectors, <code class="inline">mcp-remote</code>,
-        MCP Inspector — can connect to directly. Authentication runs through a standard
-        OAuth flow the client handles automatically: no token to copy, paste, or re-enter.
+    <header class="page-head">
+      <h1>Connect your AI assistant to Wrike XPI</h1>
+      <p class="lede">
+        Follow the steps below to link your assistant with Wrike. It only
+        takes a minute, and there's nothing technical to set up.
       </p>
+    </header>
 
-      <ol class="steps">
-        <li class="step"><span class="step-num">1</span><p>Copy one of the URLs below.</p></li>
-        <li class="step"><span class="step-num">2</span><p>Add it as a remote / custom MCP server in your client.</p></li>
-        <li class="step"><span class="step-num">3</span><p>Your client opens a browser window for Wrike login — plus an environment picker, unless you used an environment-specific URL.</p></li>
-        <li class="step"><span class="step-num">4</span><p>Once approved, the client attaches the token to every request automatically.</p></li>
-      </ol>
-    </div>
-
-    <div class="section">
-      <div class="section-head">
-        <h2>Generic connection</h2>
-        <span class="hint">choose environment at login</span>
-      </div>
+    <section>
+      <div class="eyebrow">Overview</div>
+      <div class="section-title">How it works</div>
       <div class="panel">
-        ${urlRow("url-generic", baseMcpUrl)}
+        <ol class="steps">${stepsHtml}</ol>
       </div>
-    </div>
+    </section>
 
-    ${
-      envCards
-        ? `<div class="section">
-      <div class="section-head">
-        <h2>Environment-specific connections</h2>
-        <span class="hint">skips the picker</span>
-      </div>
-      <div class="env-grid">
-        ${envCards}
-      </div>
-    </div>`
-        : ""
-    }
+    <section>
+      <div class="eyebrow">Step 1</div>
+      <div class="section-title">Get your connection link</div>
+      <div class="panel">
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="any" onclick="selectMode('any')">All environments</button>
+          <button class="mode-btn" data-mode="specific" onclick="selectMode('specific')">Specific environment</button>
+        </div>
 
-    <p class="footnote">
-      Discovery metadata lives at <code class="inline" style="font-size:0.78em">/.well-known/oauth-authorization-server</code> —
-      most MCP clients find everything else automatically once you paste a URL above.
-    </p>
+        <div class="mode-panel active" id="mode-any">
+          <p class="mode-desc">Works with every environment — you'll choose one the first time you connect.</p>
+          <div class="url-box">
+            <code>${baseMcpUrl}</code>
+            <button class="copy-btn" id="copy-any" onclick="copyBox('copy-any', '${baseMcpUrl}')">
+              <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" hidden><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mode-panel" id="mode-specific">
+          <p class="mode-desc">Always connects to one environment — no picker, no extra step.</p>
+          <div class="field-label">Environment</div>
+          <div class="select-wrap">
+            <select id="env-select" onchange="selectEnv(this.value)">
+              ${optionsHtml}
+            </select>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="url-box">
+            <code id="url-display"></code>
+            <button class="copy-btn" id="copy-specific" onclick="copySpecific()">
+              <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" hidden><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
-    function copyUrl(id, btn) {
-      const text = document.getElementById(id).innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        btn.classList.add("copied");
-        const label = btn.querySelector(".copy-label");
-        const prevLabel = label ? label.textContent : "";
-        if (label) label.textContent = "Copied";
-        setTimeout(() => {
-          btn.classList.remove("copied");
-          if (label) label.textContent = prevLabel;
-        }, 1800);
-      });
+    const specificEnvironments = ${JSON.stringify(specificEnvironments)};
+    let currentSpecific = specificEnvironments[0];
+
+    function flashCopied(btn) {
+      btn.classList.add("copied");
+      const label = btn.querySelector(".copy-label");
+      const prev = label ? label.textContent : "";
+      if (label) label.textContent = "Copied";
+      setTimeout(() => {
+        btn.classList.remove("copied");
+        if (label) label.textContent = prev;
+      }, 1600);
     }
+
+    function copyBox(btnId, text) {
+      navigator.clipboard.writeText(text).then(() => flashCopied(document.getElementById(btnId)));
+    }
+
+    function copySpecific() {
+      if (!currentSpecific) return;
+      copyBox("copy-specific", currentSpecific.url);
+    }
+
+    function renderSpecific() {
+      if (!currentSpecific) return;
+      document.getElementById("url-display").textContent = currentSpecific.url;
+    }
+
+    function selectEnv(key) {
+      currentSpecific = specificEnvironments.find((e) => e.key === key) || specificEnvironments[0];
+      renderSpecific();
+    }
+
+    function selectMode(mode) {
+      document.querySelectorAll(".mode-btn").forEach((el) => {
+        el.classList.toggle("active", el.dataset.mode === mode);
+      });
+      document.getElementById("mode-any").classList.toggle("active", mode === "any");
+      document.getElementById("mode-specific").classList.toggle("active", mode === "specific");
+    }
+
+    renderSpecific();
   </script>
 </body>
 </html>`;
