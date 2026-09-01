@@ -8,6 +8,20 @@ const WRIKE_MCP_TIMEOUT_MS = 8000;
 const WRIKE_MCP_TOOLS_CACHE_TTL_SECONDS = 300;
 
 /**
+ * `fetch()` failures collapse to a useless generic "fetch failed" message —
+ * the real reason (DNS, TLS, ECONNREFUSED, a 401/403 from the remote server)
+ * lives in `err.cause` or, for HTTP-status errors the SDK throws, in
+ * `err.code`/`err.data`. Surface all of it so this is actually debuggable.
+ */
+const describeError = (err) => {
+  const parts = [err?.message || String(err)];
+  if (err?.cause) parts.push(`cause: ${err.cause.message || err.cause}`);
+  if (err?.code !== undefined) parts.push(`code: ${err.code}`);
+  if (err?.data !== undefined) parts.push(`data: ${JSON.stringify(err.data)}`);
+  return parts.join(" | ");
+};
+
+/**
  * Connect a short-lived MCP client to Wrike's own hosted MCP server, using
  * the same raw Wrike OAuth access token this app already holds per-request.
  * Guarded by an AbortController so a slow/down Wrike MCP can't hang requests.
@@ -116,11 +130,16 @@ export const getWrikeMcpTools = async (fastify, wrikeToken) => {
   try {
     client = await connectWrikeMcpClient(wrikeToken);
     const { tools } = await client.listTools();
+    fastify?.log?.info?.(
+      `Wrike MCP tools/list returned ${tools?.length ?? 0} tool(s)${
+        !tools?.length ? " — check the token's scope/app authorization on Wrike's side" : ""
+      }`,
+    );
     await redisClient.set(cacheKey, tools, WRIKE_MCP_TOOLS_CACHE_TTL_SECONDS);
     return tools;
   } catch (err) {
     fastify?.log?.warn?.(
-      `Wrike MCP tools/list failed, continuing with native tools only: ${err?.message || err}`,
+      `Wrike MCP tools/list failed, continuing with native tools only: ${describeError(err)}`,
     );
     return [];
   } finally {
@@ -140,7 +159,7 @@ const proxyCallTool = async (fastify, wrikeToken, remoteName, args) => {
     return await client.callTool({ name: remoteName, arguments: args || {} });
   } catch (err) {
     fastify?.log?.warn?.(
-      `Wrike MCP call to "${remoteName}" failed: ${err?.message || err}`,
+      `Wrike MCP call to "${remoteName}" failed: ${describeError(err)}`,
     );
     return {
       isError: true,
