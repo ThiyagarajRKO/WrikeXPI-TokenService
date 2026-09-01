@@ -3273,6 +3273,11 @@
               '">' +
               '<i class="fa-solid fa-pen-to-square"></i> Edit' +
               "</button>" +
+              '<button class="btn btn-ghost btn-sm dup-btn" data-id="' +
+              env.id +
+              '" title="Duplicate environment">' +
+              '<i class="fa-regular fa-clone"></i> Duplicate' +
+              "</button>" +
               '<button class="btn btn-danger btn-sm delete-btn" data-id="' +
               env.id +
               '" data-name="' +
@@ -3401,7 +3406,10 @@
             "</td>" +
             '<td><button class="btn btn-ghost btn-sm edit-btn" data-id="' +
             env.id +
-            '"><i class="fa-solid fa-pen-to-square"></i> Edit</button></td>' +
+            '"><i class="fa-solid fa-pen-to-square"></i> Edit</button>' +
+            '<button class="btn btn-ghost btn-sm dup-btn" data-id="' +
+            env.id +
+            '" title="Duplicate environment"><i class="fa-regular fa-clone"></i> Duplicate</button></td>' +
             "</tr>";
         });
 
@@ -3754,6 +3762,56 @@
         }, 120);
       }
 
+      function openDuplicateModal(id) {
+        var env = environments.find(function (e) {
+          return e.id === id;
+        });
+        if (!env) return;
+
+        // Duplicate creates a NEW environment (POST, not PUT)
+        editingId = null;
+        $("#modalTitle").text("Duplicate — " + env.environment_name);
+
+        $("#envForm")[0].reset();
+        $("#envName").prop("disabled", false);
+
+        // Environment name is unique, so prefill with a copy suffix
+        var dupName = env.environment_name + " Copy";
+        if (dupName.length > 255) {
+          dupName = env.environment_name.substring(0, 245) + " Copy";
+        }
+        $("#envName").val(dupName);
+
+        // Unique identifier fields are intentionally left blank
+        $("#clientId").val("");
+        $("#clientSecret").val("");
+        $("#accountId").val("");
+
+        // Everything else is copied from the source environment
+        $("#xpiApiModulesDatahubId").val(env.xpi_api_modules_datahub_id);
+        $("#xpiApiServicesDatahubId").val(env.xpi_api_services_datahub_id);
+        $("#xpiEntityDatahubId").val(env.xpi_entity_datahub_id);
+        $("#xpiFieldMappingDatahubId").val(env.xpi_field_mapping_datahub_id);
+        $("#xpiRequestFormFieldMappingDatahubId").val(
+          env.xpi_request_form_field_mapping_datahub_id,
+        );
+        $("#xpiRequestFormMappingDatahubId").val(
+          env.xpi_request_form_mapping_datahub_id,
+        );
+        $("#xpiSpaceNameDatahubId").val(env.xpi_space_name_datahub_id);
+        $("#campaignSpaceId").val(env.campaign_space_id);
+
+        $("#isVisible").prop("checked", env.is_visible);
+        $("#isActive").prop("checked", env.is_active);
+
+        // Hide redirect URL section (only relevant after the copy is saved)
+        $("#redirectUrlContainer").hide();
+        $("#envModalBackdrop").addClass("show");
+        setTimeout(function () {
+          $("#clientId").focus();
+        }, 120);
+      }
+
       function closeModal() {
         $("#envModalBackdrop").removeClass("show");
         editingId = null;
@@ -3936,6 +3994,11 @@
       /* Edit / Delete (delegated — works for table + overview list) */
       $(document).on("click", ".edit-btn", function () {
         openEditModal($(this).data("id"));
+      });
+
+      /* Duplicate (delegated — works for table + overview list) */
+      $(document).on("click", ".dup-btn", function () {
+        openDuplicateModal($(this).data("id"));
       });
 
       $(document).on("click", ".delete-btn", function () {
