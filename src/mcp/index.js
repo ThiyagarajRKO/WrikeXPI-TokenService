@@ -3,6 +3,7 @@ import { registerCampaignTools } from "./tools/campaign.js";
 import { registerChannelTools } from "./tools/channel.js";
 import { registerTaskTools } from "./tools/task.js";
 import { registerDatahubTools } from "./tools/datahub.js";
+import { registerWrikeProxyTools } from "./wrikeMcpProxy.js";
 
 /**
  * Create a fully-configured MCP server with all tools registered.
@@ -13,9 +14,9 @@ import { registerDatahubTools } from "./tools/datahub.js";
  * @param {object} fastify - Fastify instance
  * @param {string} serverUrl - Base URL for auth error messages
  * @param {{wrikeToken: string, environmentName: string}} auth - Resolved auth for this request
- * @returns {McpServer}
+ * @returns {Promise<McpServer>}
  */
-export const createMcpServer = (fastify, serverUrl, auth) => {
+export const createMcpServer = async (fastify, serverUrl, auth) => {
   const server = new McpServer(
     {
       name: "wrikexpi-mcp",
@@ -41,6 +42,12 @@ export const createMcpServer = (fastify, serverUrl, auth) => {
   registerChannelTools(server, serverUrl, auth);
   registerTaskTools(server, serverUrl, auth);
   registerDatahubTools(server, serverUrl, auth);
+
+  // Merges in Wrike's own hosted MCP tools (no-ops if WRIKE_MCP_URL is unset
+  // or unreachable — native XPI tools above are unaffected either way).
+  if (auth?.wrikeToken) {
+    await registerWrikeProxyTools(server, fastify, auth.wrikeToken);
+  }
 
   return server;
 };

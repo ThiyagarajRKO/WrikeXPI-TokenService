@@ -65,7 +65,7 @@ module.exports = async function (fastify, opts) {
       }
 
       // Fresh server + transport per request — no shared session state
-      const server = createMcpServer(fastify, serverUrl, auth);
+      const server = await createMcpServer(fastify, serverUrl, auth);
       const transport = new StreamableHTTPServerTransport({
         enableJsonResponse: true,
       });
