@@ -62,6 +62,11 @@ export const registerChannelTools = (server, serverUrl, auth) => {
           .optional()
           .describe("Token for the next page of results"),
       },
+      annotations: {
+        title: "List Channels",
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
     },
     async (
       { campaignId, filter, pageSize, nextPageToken },
@@ -95,6 +100,11 @@ export const registerChannelTools = (server, serverUrl, auth) => {
       description: "Read a single channel by its Wrike task/folder ID.",
       inputSchema: {
         channelId: z.string().describe("The Wrike ID of the channel"),
+      },
+      annotations: {
+        title: "Get Channel",
+        readOnlyHint: true,
+        openWorldHint: true,
       },
     },
     async ({ channelId }, extra) => {
@@ -132,6 +142,13 @@ export const registerChannelTools = (server, serverUrl, auth) => {
           .default({})
           .describe("Key-value map of field names to new values"),
       },
+      annotations: {
+        title: "Update Channel",
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ channelId, formFields }, extra) => {
       if (!auth) return getAuthError(serverUrl);
@@ -162,6 +179,13 @@ export const registerChannelTools = (server, serverUrl, auth) => {
       description: "Delete a channel by its Wrike ID.",
       inputSchema: {
         channelId: z.string().describe("The Wrike ID of the channel"),
+      },
+      annotations: {
+        title: "Delete Channel",
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
       },
     },
     async ({ channelId }, extra) => {

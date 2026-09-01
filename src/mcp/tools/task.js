@@ -45,6 +45,11 @@ export const registerTaskTools = (server, serverUrl, auth) => {
           .optional()
           .describe("Token for the next page of results"),
       },
+      annotations: {
+        title: "List Channel Tasks",
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
     },
     async (
       { channelId, filter, pageSize, nextPageToken },
@@ -110,6 +115,11 @@ export const registerTaskTools = (server, serverUrl, auth) => {
           .optional()
           .describe("Token for the next page of results"),
       },
+      annotations: {
+        title: "List Campaign Tasks",
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
     },
     async (
       { campaignId, filter, pageSize, nextPageToken },
@@ -142,6 +152,11 @@ export const registerTaskTools = (server, serverUrl, auth) => {
       description: "Read a single task by its Wrike task ID.",
       inputSchema: {
         taskId: z.string().describe("The Wrike task ID"),
+      },
+      annotations: {
+        title: "Get Task",
+        readOnlyHint: true,
+        openWorldHint: true,
       },
     },
     async ({ taskId }, extra) => {
@@ -179,6 +194,13 @@ export const registerTaskTools = (server, serverUrl, auth) => {
           .default({})
           .describe("Key-value map of field names to new values"),
       },
+      annotations: {
+        title: "Update Task",
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ taskId, formFields }, extra) => {
       if (!auth) return getAuthError(serverUrl);
@@ -209,6 +231,13 @@ export const registerTaskTools = (server, serverUrl, auth) => {
       description: "Delete a task by its Wrike task ID.",
       inputSchema: {
         taskId: z.string().describe("The Wrike task ID"),
+      },
+      annotations: {
+        title: "Delete Task",
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
       },
     },
     async ({ taskId }, extra) => {

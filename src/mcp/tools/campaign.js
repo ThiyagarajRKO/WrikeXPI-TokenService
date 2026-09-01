@@ -86,6 +86,11 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
           .optional()
           .describe("Token for the next page of results"),
       },
+      annotations: {
+        title: "List Campaigns",
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ filter, pageSize, nextPageToken }, extra) => {
       if (!auth) return getAuthError(serverUrl);
@@ -116,6 +121,11 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
       description: "Read a single campaign by its Wrike folder ID.",
       inputSchema: {
         campaignId: z.string().describe("The Wrike folder ID of the campaign"),
+      },
+      annotations: {
+        title: "Get Campaign",
+        readOnlyHint: true,
+        openWorldHint: true,
       },
     },
     async ({ campaignId }, extra) => {
@@ -158,6 +168,13 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
           .boolean()
           .optional()
           .describe("If true, returns a pre-fill URL instead of submitting"),
+      },
+      annotations: {
+        title: "Create Campaign",
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
       },
     },
     async (
@@ -205,6 +222,13 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
           .default({})
           .describe("Key-value map of field names to new values"),
       },
+      annotations: {
+        title: "Update Campaign",
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ campaignId, formFields }, extra) => {
       if (!auth) return getAuthError(serverUrl);
@@ -235,6 +259,13 @@ export const registerCampaignTools = (server, fastify, serverUrl, auth) => {
       description: "Delete a campaign by its Wrike folder ID.",
       inputSchema: {
         campaignId: z.string().describe("The Wrike folder ID of the campaign"),
+      },
+      annotations: {
+        title: "Delete Campaign",
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
       },
     },
     async ({ campaignId }, extra) => {

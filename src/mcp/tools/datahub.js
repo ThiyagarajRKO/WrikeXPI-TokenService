@@ -41,6 +41,11 @@ export const registerDatahubTools = (server, serverUrl, auth) => {
           .optional()
           .describe("Include raw metadata alongside field definitions"),
       },
+      annotations: {
+        title: "List Datahub Fields",
+        readOnlyHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ includeMetadata }, extra) => {
       if (!auth) return getAuthError(serverUrl);
