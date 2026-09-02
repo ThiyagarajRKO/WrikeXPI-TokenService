@@ -24,12 +24,15 @@ const AdminTOTPPage = (req, reply) => {
   }
 };
 
+// Served from the React build (frontend/ -> public/app/, see
+// src/plugins/appStatic.js). appUrl/wrikeRedirectUrl are fetched
+// client-side from GET /api/v1/app-config instead of being server-injected.
 const AdminDashboardPage = (req, reply) => {
   try {
-    return reply.view("admin/dashboard", {
-      wrikeRedirectUrl: process.env.WRIKE_REDIRECT_URL || "",
-      appUrl: process.env.APP_URL || "",
-    });
+    return reply.sendFile(
+      "admin-dashboard.html",
+      process.cwd() + "/public/app",
+    );
   } catch (err) {
     return reply.code(500).send({ error: "Failed to load dashboard" });
   }

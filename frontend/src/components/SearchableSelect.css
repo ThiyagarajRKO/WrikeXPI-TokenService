@@ -1,0 +1,130 @@
+/*
+  Matches the .env-select look shared with the MCP OAuth picker
+  (src/routes/oauth/index.js renderEnvironmentPicker) — same translucent
+  glass surface, border, and #34d399 focus accent — just with a search
+  input + custom option list instead of a native <select>.
+*/
+.searchable-select {
+  position: relative;
+  width: 100%;
+}
+
+.searchable-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.17);
+}
+
+.searchable-select-trigger:focus-visible,
+.searchable-select-trigger[aria-expanded="true"] {
+  border-color: #34d399;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.searchable-select-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.searchable-select-placeholder {
+  color: rgba(226, 232, 240, 0.55);
+}
+
+.searchable-select-caret {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.searchable-select-caret.open {
+  transform: rotate(180deg);
+}
+
+.searchable-select-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  animation: searchable-select-in 0.12s ease-out;
+}
+
+@keyframes searchable-select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchable-select-search {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.searchable-select-search::placeholder {
+  color: rgba(15, 23, 42, 0.4);
+}
+
+.searchable-select-options {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.searchable-select-option {
+  padding: 9px 10px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.searchable-select-option.highlighted {
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.searchable-select-option.selected {
+  color: #047857;
+  font-weight: 600;
+}
+
+.searchable-select-empty {
+  padding: 12px 10px;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.45);
+  text-align: center;
+}

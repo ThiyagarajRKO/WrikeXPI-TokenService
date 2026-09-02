@@ -34,6 +34,20 @@ export const PublicRouters = (fastify, opts, done) => {
   fastify.register(portalApiRoute, { prefix: "/portal" });
   fastify.register(mcpPlugin, { prefix: "/wrikexpi" });
 
+  // Non-secret app config the admin dashboard / portal home pages need on
+  // load (frontend/src/pages/AdminDashboard.tsx, PortalHome.tsx) — fetched
+  // client-side instead of being server-injected into their HTML, same
+  // plain-sendFile pattern as every other migrated page.
+  fastify.get("/app-config", async (req, reply) => {
+    reply.send({
+      success: true,
+      data: {
+        appUrl: process.env.APP_URL || "",
+        wrikeRedirectUrl: process.env.WRIKE_REDIRECT_URL || "",
+      },
+    });
+  });
+
   fastify.get("/datahub/customfield", async (req, reply) => {
     try {
       const result = await getDatahubCustomFields();

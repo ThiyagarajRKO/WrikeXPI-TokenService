@@ -10,7 +10,7 @@ import {
   type PortalEnvironmentFull,
   type PortalEnvironmentInput,
 } from "../lib/portalAuthApi";
-import { getPortalHomeInit } from "../lib/portalHomeInit";
+import { fetchAppConfig, type AppConfig } from "../lib/appConfig";
 import "./PortalHome.css";
 
 type PageId = "overview" | "environments";
@@ -180,7 +180,12 @@ export default function PortalHome() {
 
   const token = getPortalToken();
   const role = getPortalRole();
-  const { appUrl, wrikeRedirectUrl } = useMemo(() => getPortalHomeInit(), []);
+  const [config, setConfig] = useState<AppConfig>({ appUrl: "", wrikeRedirectUrl: "" });
+  const { appUrl, wrikeRedirectUrl } = config;
+
+  useEffect(() => {
+    fetchAppConfig().then(setConfig);
+  }, []);
 
   /* ── Session guard (mirrors the EJS inline script exactly) ──────────── */
   useEffect(() => {

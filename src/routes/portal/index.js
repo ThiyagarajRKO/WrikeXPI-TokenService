@@ -1,4 +1,3 @@
-import fs from "fs";
 import { portalAuthRoute } from "./auth";
 import { portalUsersRoute } from "./users";
 import { portalEnvironmentsRoute } from "./environments";
@@ -38,27 +37,11 @@ const PortalDashboardPage = (req, reply) => {
 };
 
 // Served from the React build (frontend/ -> public/app/, see
-// src/plugins/appStatic.js). Unlike the other portal pages, this one has
-// genuine server-only state (APP_URL / WRIKE_REDIRECT_URL env vars), so it's
-// injected into the served HTML as window.__PORTAL_HOME_INIT__, mirroring
-// src/index.js's GET / -> window.__ROOT_LOGIN_INIT__ pattern.
+// src/plugins/appStatic.js). appUrl/wrikeRedirectUrl are fetched
+// client-side from GET /api/v1/app-config instead of being server-injected.
 const PortalUserPage = (req, reply) => {
   try {
-    const initData = {
-      appUrl: process.env.APP_URL || "",
-      wrikeRedirectUrl: process.env.WRIKE_REDIRECT_URL || "",
-    };
-
-    const template = fs.readFileSync(
-      process.cwd() + "/public/app/portal-home.html",
-      "utf8",
-    );
-    const html = template.replace(
-      '<div id="root"></div>',
-      `<div id="root"></div>\n    <script>window.__PORTAL_HOME_INIT__ = ${JSON.stringify(initData)};</script>`,
-    );
-
-    return reply.type("text/html").send(html);
+    return reply.sendFile("portal-home.html", process.cwd() + "/public/app");
   } catch (err) {
     return reply.code(500).send({ error: "Failed to load user page" });
   }

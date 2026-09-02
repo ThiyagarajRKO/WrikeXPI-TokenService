@@ -3,7 +3,6 @@
 // Importing Modules to Start Server
 import AutoLoad from "@fastify/autoload";
 import path from "path";
-import fs from "fs";
 import Fastify from "fastify";
 import dotenv from "dotenv";
 dotenv.config();
@@ -157,47 +156,35 @@ import {
     res.send({ success: true, redirectUrl });
   });
 
-  // View Handlers
-  // Served from the React build (frontend/ -> public/app/, see
-  // src/plugins/appStatic.js). Unlike the auth pages, this one has genuine
-  // server-computed state (env list, autoRedirect, initial redirect URL via
-  // findRedirectionURL) — autoRedirect is handled exactly as before with a
-  // raw 302, and everything else is injected into the served HTML as
-  // window.__ROOT_LOGIN_INIT__ for frontend/src/pages/RootLogin.tsx to read.
-  fastify.get("/", async (req, res) => {
-    const { accountId, redirectUri, autoRedirect } = req.query;
-
-    const { selectedEnvironment, redirectUrl } = findRedirectionURL(
-      req.query,
-      fastify,
-    );
-
-    if (autoRedirect == "true" || autoRedirect == "1") {
-      return res.redirect(redirectUrl);
-    }
-
-    // Use visible credentials for dropdown (only admins can see hidden environments)
+  // Environment list + which one is currently selected, for the root
+  // login page's dropdown (frontend/src/pages/RootLogin.tsx fetches this
+  // client-side instead of it being server-injected into the HTML — see
+  // frontend/src/lib/rootLoginApi.ts).
+  fastify.get("/environments", async (req, res) => {
+    const { selectedEnvironment } = findRedirectionURL(req.query, fastify);
     const visibleCreds = getCachedVisibleWrikeCredentials();
     const environments = Object.keys(visibleCreds || {});
 
-    const initData = {
-      environments,
-      selectedEnvironment,
-      redirectUrl,
-      redirectUri: redirectUri || "",
-      accountId: accountId || "",
-    };
+    res.send({ success: true, environments, selectedEnvironment });
+  });
 
-    const template = fs.readFileSync(
-      process.cwd() + "/public/app/root-login.html",
-      "utf8",
-    );
-    const html = template.replace(
-      "<div id=\"root\"></div>",
-      `<div id="root"></div>\n    <script>window.__ROOT_LOGIN_INIT__ = ${JSON.stringify(initData)};</script>`,
-    );
+  // View Handlers
+  // Served from the React build (frontend/ -> public/app/, see
+  // src/plugins/appStatic.js). autoRedirect is still handled server-side
+  // with a raw 302 (must happen before any HTML/JS ever loads) — everything
+  // else (environment list, initial redirect URL) is now fetched
+  // client-side via /environments and /get-redirect-url instead of being
+  // injected into the served HTML, same plain-sendFile pattern as every
+  // other migrated page.
+  fastify.get("/", async (req, res) => {
+    const { autoRedirect } = req.query;
 
-    res.type("text/html").send(html);
+    if (autoRedirect == "true" || autoRedirect == "1") {
+      const { redirectUrl } = findRedirectionURL(req.query, fastify);
+      return res.redirect(redirectUrl);
+    }
+
+    return res.sendFile("root-login.html", process.cwd() + "/public/app");
   });
 
   // Run the server!

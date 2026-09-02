@@ -7,6 +7,18 @@
 
 body {
   font-family: "Inter", sans-serif;
+  color: #fff;
+}
+
+/*
+  The original inline-HTML page had .top-nav/.card as direct children of
+  <body>, so body's own flex centered the card. The React build always
+  wraps page content in <div id="root"> (which src/index.css gives an
+  explicit height: 100% for pages that need it), so the centering has to
+  live on a wrapper *inside* #root instead of on body itself, or #root's
+  fixed height breaks the centering and the card collapses to the top.
+*/
+.root-login-page {
   height: 100vh;
   background: linear-gradient(-45deg, #1f1c2c, #928dab, #2e2e52, #515175);
   background-size: 400% 400%;
@@ -14,7 +26,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
 }
 
 @keyframes gradient {

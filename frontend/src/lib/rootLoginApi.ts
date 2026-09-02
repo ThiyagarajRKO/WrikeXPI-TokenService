@@ -1,26 +1,29 @@
 export interface RootLoginInit {
   environments: string[];
   selectedEnvironment: string;
-  redirectUrl: string;
-  redirectUri: string;
-  accountId: string;
 }
 
-declare global {
-  interface Window {
-    __ROOT_LOGIN_INIT__?: RootLoginInit;
+const DEFAULT_INIT: RootLoginInit = { environments: [], selectedEnvironment: "" };
+
+/**
+ * GET /environments — the environment list + which one is pre-selected,
+ * fetched client-side instead of being server-injected into the HTML.
+ * Forwards the same query params findRedirectionURL already reads
+ * (environmentId/environment) so a deep link still pre-selects correctly.
+ */
+export const fetchEnvironments = async (): Promise<RootLoginInit> => {
+  try {
+    const res = await fetch(`/environments${window.location.search}`);
+    const data = await res.json().catch(() => null);
+    if (!data?.success) return DEFAULT_INIT;
+    return {
+      environments: Array.isArray(data.environments) ? data.environments : [],
+      selectedEnvironment: data.selectedEnvironment || "",
+    };
+  } catch {
+    return DEFAULT_INIT;
   }
-}
-
-/** Injected server-side by src/index.js's GET / handler (see findRedirectionURL). */
-export const getInit = (): RootLoginInit =>
-  window.__ROOT_LOGIN_INIT__ ?? {
-    environments: [],
-    selectedEnvironment: "",
-    redirectUrl: "",
-    redirectUri: "",
-    accountId: "",
-  };
+};
 
 /**
  * GET /get-redirect-url — same endpoint the original inline script already

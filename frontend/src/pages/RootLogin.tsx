@@ -1,16 +1,43 @@
 import { useEffect, useState } from "react";
-import { fetchRedirectUrl, getInit } from "../lib/rootLoginApi";
+import { fetchEnvironments, fetchRedirectUrl } from "../lib/rootLoginApi";
+import SearchableSelect from "../components/SearchableSelect";
 import "./RootLogin.css";
 
 // Faithful React port of the inline HTML in src/index.js's GET / handler.
-// Initial environment list / selected env / redirect URL are computed
-// server-side (findRedirectionURL) exactly as before and injected as
-// window.__ROOT_LOGIN_INIT__ — this page only replicates the client-side
-// dropdown/redirect interactivity, now state-driven instead of manual DOM.
+// Environment list / selected env / initial redirect URL are fetched
+// client-side (GET /environments, GET /get-redirect-url) instead of being
+// server-injected — redirectUri/accountId are plain pass-through query
+// params, read straight from the current URL, same as any other page.
+const searchParams = new URLSearchParams(window.location.search);
+const initialRedirectUri = searchParams.get("redirectUri") || "";
+const initialAccountId = searchParams.get("accountId") || "";
+
 export default function RootLogin() {
-  const init = getInit();
-  const [environment, setEnvironment] = useState(init.selectedEnvironment);
+  const [environments, setEnvironments] = useState<string[]>([]);
+  const [environment, setEnvironment] = useState("");
+  const [redirectUrl, setRedirectUrl] = useState("");
+  const [envLoading, setEnvLoading] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchEnvironments().then(async (init) => {
+      if (cancelled) return;
+      setEnvironments(init.environments);
+      setEnvironment(init.selectedEnvironment);
+      setEnvLoading(false);
+
+      const url = await fetchRedirectUrl({
+        environment: init.selectedEnvironment,
+        redirectUri: initialRedirectUri,
+        accountId: initialAccountId,
+      });
+      if (!cancelled && url) setRedirectUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     // Reset button if the browser restores this page from bfcache after a redirect.
@@ -22,7 +49,7 @@ export default function RootLogin() {
   const handleLogin = async (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
 
-    if (init.environments.length === 0) {
+    if (environments.length === 0) {
       alert(
         "No environments configured. Please contact your administrator to configure Wrike environments.",
       );
@@ -35,20 +62,20 @@ export default function RootLogin() {
 
     setLoading(true);
 
-    const redirectUrl =
+    const url =
       (await fetchRedirectUrl({
         environment,
-        redirectUri: init.redirectUri,
-        accountId: init.accountId,
-      })) || init.redirectUrl;
+        redirectUri: initialRedirectUri,
+        accountId: initialAccountId,
+      })) || redirectUrl;
 
     setTimeout(() => {
-      window.location.href = redirectUrl;
+      window.location.href = url;
     }, 600);
   };
 
   return (
-    <>
+    <div className="root-login-page">
       <div className="top-nav">
         <a href="/docs/mcp">MCP Docs</a>
         <a href="/docs/api">API Docs</a>
@@ -64,22 +91,18 @@ export default function RootLogin() {
           <label htmlFor="envSelect" className="env-select-label">
             Choose Environment
           </label>
-          <select
+          <SearchableSelect
             id="envSelect"
-            className="env-select"
+            options={environments}
             value={environment}
-            onChange={(e) => setEnvironment(e.target.value)}
-          >
-            {init.environments.map((env) => (
-              <option key={env} value={env}>
-                {env}
-              </option>
-            ))}
-          </select>
+            onChange={setEnvironment}
+            disabled={envLoading}
+            placeholder="Search environments…"
+          />
         </div>
 
         <p>To continue, please log in using your Wrike credentials.</p>
-        <a href={init.redirectUrl} className="button" onClick={handleLogin}>
+        <a href={redirectUrl} className="button" onClick={handleLogin}>
           {loading ? (
             <div className="loader" />
           ) : (
@@ -114,6 +137,6 @@ export default function RootLogin() {
           </a>
         </p>
       </div>
-    </>
+    </div>
   );
 }

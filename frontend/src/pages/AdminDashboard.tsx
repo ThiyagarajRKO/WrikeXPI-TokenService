@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { adminFetch, adminLogout, clearAdminSession, getAccessToken } from "../lib/authApi";
-import { getAdminDashboardInit } from "../lib/adminDashboardInit";
+import { adminLogout, clearAdminSession, getAccessToken } from "../lib/authApi";
+import { fetchAppConfig, type AppConfig } from "../lib/appConfig";
 import {
   assignPortalUserEnvironment,
   bulkDeleteCacheEntries,
@@ -475,7 +475,11 @@ function CopyIconButton({
 // Faithful React port of views/admin/dashboard.ejs.
 export default function AdminDashboard() {
   const token = getAccessToken();
-  const init = getAdminDashboardInit();
+  const [config, setConfig] = useState<AppConfig>({ appUrl: "", wrikeRedirectUrl: "" });
+
+  useEffect(() => {
+    fetchAppConfig().then(setConfig);
+  }, []);
 
   /* ── Session guard ────────────────────────────────────────────────── */
   useEffect(() => {
@@ -726,8 +730,8 @@ export default function AdminDashboard() {
     setDuplicateSourceId(null);
   }
 
-  const wrikeRedirectUrl = init.wrikeRedirectUrl;
-  const appUrl = init.appUrl;
+  const wrikeRedirectUrl = config.wrikeRedirectUrl;
+  const appUrl = config.appUrl;
 
   const showRedirectSectionInModal =
     envModalMode === "edit" && !!wrikeRedirectUrl && !!editingId && !!appUrl;
