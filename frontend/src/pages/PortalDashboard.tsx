@@ -7,6 +7,7 @@ import {
   portalLogout,
   type PortalEnvironment,
 } from "../lib/portalAuthApi";
+import { useHashPage } from "../lib/useHashPage";
 import "./PortalDashboard.css";
 
 type PageId = "overview" | "environments";
@@ -15,6 +16,8 @@ const PAGE_NAMES: Record<PageId, string> = {
   overview: "Overview",
   environments: "Environments",
 };
+
+const PAGE_IDS = Object.keys(PAGE_NAMES) as PageId[];
 
 /* ── Small shared helpers (ported 1:1 from the EJS <script>) ───────────── */
 
@@ -133,7 +136,7 @@ const ENV_TABLE_HEAD = `
 export default function PortalDashboard() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activePage, setActivePage] = useState<PageId>("overview");
+  const [activePage, setActivePage] = useHashPage<PageId>(PAGE_IDS, "overview");
   const [environments, setEnvironments] = useState<PortalEnvironment[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);

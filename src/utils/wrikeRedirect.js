@@ -30,7 +30,15 @@ export const findRedirectionURL = (
       selectedEnvironment = environment;
     }
 
+    // getCachedWrikeCredentials() is ordered most-recently-created-first
+    // (see WrikeCredentials.GetAll's `order: [["created_at", "DESC"]]`), so
+    // the first key here is the most recently added environment — used both
+    // to resolve the credential AND (below) reported back as
+    // `selectedEnvironment` when the caller didn't request a specific one,
+    // so a dropdown built from this can show the right thing pre-selected.
     const defaultEnvKey = Object.keys(allCreds)[0];
+    if (!selectedEnvironment) selectedEnvironment = defaultEnvKey || "";
+
     const selectedCred = selectedEnvironment
       ? allCreds?.[selectedEnvironment]
       : allCreds[defaultEnvKey];

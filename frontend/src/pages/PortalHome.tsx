@@ -11,6 +11,7 @@ import {
   type PortalEnvironmentInput,
 } from "../lib/portalAuthApi";
 import { fetchAppConfig, type AppConfig } from "../lib/appConfig";
+import { useHashPage } from "../lib/useHashPage";
 import "./PortalHome.css";
 
 type PageId = "overview" | "environments";
@@ -19,6 +20,8 @@ const PAGE_NAMES: Record<PageId, string> = {
   overview: "Overview",
   environments: "My Environments",
 };
+
+const PAGE_IDS = Object.keys(PAGE_NAMES) as PageId[];
 
 /* ── Small shared helpers (ported 1:1 from the EJS <script>) ───────────── */
 
@@ -170,7 +173,7 @@ function formFromEnv(env: PortalEnvironmentFull): EnvForm {
 export default function PortalHome() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activePage, setActivePage] = useState<PageId>("overview");
+  const [activePage, setActivePage] = useHashPage<PageId>(PAGE_IDS, "overview");
   const [environments, setEnvironments] = useState<PortalEnvironmentFull[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);

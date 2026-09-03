@@ -3,11 +3,15 @@ import { fetchEnvironments, fetchRedirectUrl } from "../lib/rootLoginApi";
 import SearchableSelect from "../components/SearchableSelect";
 import "./RootLogin.css";
 
-// Faithful React port of the inline HTML in src/index.js's GET / handler.
-// Environment list / selected env / initial redirect URL are fetched
-// client-side (GET /environments, GET /get-redirect-url) instead of being
-// server-injected — redirectUri/accountId are plain pass-through query
-// params, read straight from the current URL, same as any other page.
+// Faithful React port of the inline HTML in src/index.js's GET / handler,
+// with one deliberate improvement over the original: the button's target
+// URL now stays in sync as the dropdown changes (verified against the full
+// git history — the original only ever resolved the URL at click time, so
+// this is a new behavior, not a restored one) instead of only resolving on
+// click. Environment list / selected env / redirect URL are fetched
+// client-side (GET /environments, GET /get-redirect-url) — redirectUri/
+// accountId are plain pass-through query params, read straight from the
+// current URL, same as any other page.
 const searchParams = new URLSearchParams(window.location.search);
 const initialRedirectUri = searchParams.get("redirectUri") || "";
 const initialAccountId = searchParams.get("accountId") || "";
@@ -17,27 +21,44 @@ export default function RootLogin() {
   const [environment, setEnvironment] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
   const [envLoading, setEnvLoading] = useState(true);
+  const [urlResolving, setUrlResolving] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    fetchEnvironments().then(async (init) => {
+    fetchEnvironments().then((init) => {
       if (cancelled) return;
       setEnvironments(init.environments);
       setEnvironment(init.selectedEnvironment);
       setEnvLoading(false);
-
-      const url = await fetchRedirectUrl({
-        environment: init.selectedEnvironment,
-        redirectUri: initialRedirectUri,
-        accountId: initialAccountId,
-      });
-      if (!cancelled && url) setRedirectUrl(url);
     });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Keep the button's target URL in sync with whichever environment is
+  // currently selected — covers both the initial selection and every
+  // subsequent dropdown change with one effect.
+  useEffect(() => {
+    if (!environment) return;
+    let cancelled = false;
+    setUrlResolving(true);
+
+    fetchRedirectUrl({
+      environment,
+      redirectUri: initialRedirectUri,
+      accountId: initialAccountId,
+    }).then((url) => {
+      if (cancelled) return;
+      if (url) setRedirectUrl(url);
+      setUrlResolving(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [environment]);
 
   useEffect(() => {
     // Reset button if the browser restores this page from bfcache after a redirect.
@@ -46,7 +67,7 @@ export default function RootLogin() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  const handleLogin = async (event: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleLogin = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
 
     if (environments.length === 0) {
@@ -59,20 +80,15 @@ export default function RootLogin() {
       alert("Please select an environment from the dropdown to proceed.");
       return;
     }
+    if (urlResolving || !redirectUrl) return;
 
     setLoading(true);
-
-    const url =
-      (await fetchRedirectUrl({
-        environment,
-        redirectUri: initialRedirectUri,
-        accountId: initialAccountId,
-      })) || redirectUrl;
-
     setTimeout(() => {
-      window.location.href = url;
+      window.location.href = redirectUrl;
     }, 600);
   };
+
+  const buttonBusy = loading || urlResolving;
 
   return (
     <div className="root-login-page">
@@ -102,8 +118,8 @@ export default function RootLogin() {
         </div>
 
         <p>To continue, please log in using your Wrike credentials.</p>
-        <a href={redirectUrl} className="button" onClick={handleLogin}>
-          {loading ? (
+        <a href={redirectUrl || undefined} className="button" onClick={handleLogin}>
+          {buttonBusy ? (
             <div className="loader" />
           ) : (
             <>

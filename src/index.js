@@ -165,7 +165,15 @@ import {
     const visibleCreds = getCachedVisibleWrikeCredentials();
     const environments = Object.keys(visibleCreds || {});
 
-    res.send({ success: true, environments, selectedEnvironment });
+    // findRedirectionURL can default to the most recently added environment
+    // even if it's hidden/admin-only (not in the visible list this dropdown
+    // offers) — fall back to the most recent *visible* one so the picker
+    // never pre-selects something that isn't one of its own options.
+    const resolvedSelection = environments.includes(selectedEnvironment)
+      ? selectedEnvironment
+      : environments[0] || "";
+
+    res.send({ success: true, environments, selectedEnvironment: resolvedSelection });
   });
 
   // View Handlers

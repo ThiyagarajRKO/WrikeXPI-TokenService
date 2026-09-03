@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { adminLogout, clearAdminSession, getAccessToken } from "../lib/authApi";
 import { fetchAppConfig, type AppConfig } from "../lib/appConfig";
+import { useHashPage } from "../lib/useHashPage";
 import {
   assignPortalUserEnvironment,
   bulkDeleteCacheEntries,
@@ -34,6 +35,8 @@ const PAGE_NAMES: Record<PageId, string> = {
   settings: "Settings",
   "cache-settings": "Cache Settings",
 };
+
+const PAGE_IDS = Object.keys(PAGE_NAMES) as PageId[];
 
 const CACHE_SEARCH_DEBOUNCE_MS = 350;
 
@@ -491,7 +494,7 @@ export default function AdminDashboard() {
   /* ── Layout state ─────────────────────────────────────────────────── */
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activePage, setActivePage] = useState<PageId>("overview");
+  const [activePage, setActivePage] = useHashPage<PageId>(PAGE_IDS, "overview");
   const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -681,6 +684,7 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [envForm, setEnvForm] = useState<EnvFormState>(EMPTY_ENV_FORM);
   const [envSaving, setEnvSaving] = useState(false);
+  const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null);
   const envNameInputRef = useRef<HTMLInputElement>(null);
   const clientIdInputRef = useRef<HTMLInputElement>(null);
 
@@ -690,8 +694,6 @@ export default function AdminDashboard() {
       : envModalMode === "duplicate"
         ? `Duplicate — ${environments.find((e) => e.id === duplicateSourceId)?.environment_name ?? ""}`
         : `Edit — ${environments.find((e) => e.id === editingId)?.environment_name ?? ""}`;
-
-  const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null);
 
   function openAddModal() {
     setEditingId(null);
